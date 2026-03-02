@@ -2,8 +2,17 @@
 
 ## Proyecto
 App de cocina colaborativa para parejas y familias.
-Stack: React Native (Expo) + NestJS + Supabase
+Stack: React Native (Expo) + NestJS + Supabase (auth/DB/storage)
 Monorepo pnpm workspaces.
+
+## Arquitectura (BACKEND-FIRST)
+- Mobile → NestJS API para TODO el CRUD
+- NestJS → PostgreSQL via Drizzle ORM (DATABASE_URL)
+- Supabase: SOLO auth (JWT) + PostgreSQL hosting + Storage
+- SIN RLS — NestJS guards manejan toda la autorización
+- Realtime shopping list: NestJS WebSockets (Socket.io)
+- Mobile usa @supabase/supabase-js SOLO para auth session
+- Mobile usa axios para todas las llamadas a la API
 
 ## Commits
 - Conventional Commits en inglés: feat(scope): message
