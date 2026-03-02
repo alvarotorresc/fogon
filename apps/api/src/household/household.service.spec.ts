@@ -1,13 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { HouseholdService } from './household.service';
+import { SupabaseService } from '../supabase/supabase.service';
 
 const mockFrom = jest.fn();
-
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: () => ({ from: mockFrom }),
-}));
 
 describe('HouseholdService', () => {
   let service: HouseholdService;
@@ -18,21 +14,118 @@ describe('HouseholdService', () => {
       providers: [
         HouseholdService,
         {
-          provide: ConfigService,
+          provide: SupabaseService,
           useValue: {
-            getOrThrow: (key: string) => {
-              const map: Record<string, string> = {
-                SUPABASE_URL: 'https://test.supabase.co',
-                SUPABASE_SERVICE_ROLE_KEY: 'test-key',
-              };
-              return map[key];
-            },
+            getClient: () => ({ from: mockFrom }),
           },
         },
       ],
     }).compile();
 
     service = module.get<HouseholdService>(HouseholdService);
+  });
+
+  describe('create', () => {
+    it('should create household and add member as owner', async () => {
+      let memberInsertCalled = false;
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'households') {
+          return {
+            insert: () => ({
+              select: () => ({
+                single: () => ({
+                  data: {
+                    id: 'h-new',
+                    name: 'My Home',
+                    invite_code: 'NEWCODE1',
+                    created_at: '2026-03-01',
+                    created_by: 'user-1',
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'household_members') {
+          return {
+            insert: (data: Record<string, unknown>) => {
+              memberInsertCalled = true;
+              expect(data).toEqual({
+                household_id: 'h-new',
+                user_id: 'user-1',
+                display_name: 'My Home',
+                avatar_color: '#8B5CF6',
+                role: 'owner',
+              });
+              return { error: null };
+            },
+          };
+        }
+        return {};
+      });
+
+      const result = await service.create('user-1', 'My Home');
+
+      expect(result).toEqual({
+        id: 'h-new',
+        name: 'My Home',
+        inviteCode: 'NEWCODE1',
+        createdAt: '2026-03-01',
+      });
+      expect(memberInsertCalled).toBe(true);
+    });
+
+    it('should throw error when household insert fails', async () => {
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'households') {
+          return {
+            insert: () => ({
+              select: () => ({
+                single: () => ({
+                  data: null,
+                  error: { message: 'Insert failed' },
+                }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      await expect(service.create('user-1', 'Bad Home')).rejects.toThrow('Insert failed');
+    });
+
+    it('should throw error when member insert fails', async () => {
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'households') {
+          return {
+            insert: () => ({
+              select: () => ({
+                single: () => ({
+                  data: {
+                    id: 'h-new',
+                    name: 'My Home',
+                    invite_code: 'NEWCODE1',
+                    created_at: '2026-03-01',
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'household_members') {
+          return {
+            insert: () => ({ error: { message: 'Member insert failed' } }),
+          };
+        }
+        return {};
+      });
+
+      await expect(service.create('user-1', 'My Home')).rejects.toThrow('Member insert failed');
+    });
   });
 
   describe('joinByInviteCode', () => {

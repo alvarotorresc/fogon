@@ -1,17 +1,14 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseService } from '../supabase/supabase.service';
 import { AVATAR_COLORS } from './constants';
 
 @Injectable()
 export class HouseholdService {
   private readonly supabase: SupabaseClient;
 
-  constructor(private readonly config: ConfigService) {
-    this.supabase = createClient(
-      this.config.getOrThrow<string>('SUPABASE_URL'),
-      this.config.getOrThrow<string>('SUPABASE_SERVICE_ROLE_KEY'),
-    );
+  constructor(private readonly supabaseService: SupabaseService) {
+    this.supabase = this.supabaseService.getClient();
   }
 
   async create(userId: string, name: string) {
