@@ -1,12 +1,13 @@
-import { IsNotEmpty, IsString, Length } from 'class-validator';
+import { IsNotEmpty, IsString, Length, MaxLength } from 'class-validator';
 
 export class JoinHouseholdDto {
   @IsString()
   @IsNotEmpty()
   @Length(8, 8)
-  inviteCode: string;
+  inviteCode!: string;
 
   @IsString()
   @IsNotEmpty()
-  displayName: string;
+  @MaxLength(100)
+  displayName!: string;
 }

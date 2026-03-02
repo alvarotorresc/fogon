@@ -4,5 +4,5 @@ export class CreateHouseholdDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  name: string;
+  name!: string;
 }
