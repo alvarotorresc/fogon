@@ -1,0 +1,31 @@
+export const COLORS = {
+  bgPrimary: '#0A0A0A',
+  bgSecondary: '#111111',
+  bgTertiary: '#1A1A1A',
+  bgElevated: '#222222',
+  border: '#2E2E2E',
+  borderSubtle: '#1E1E1E',
+  textPrimary: '#EDEDED',
+  textSecondary: '#A3A3A3',
+  textTertiary: '#525252',
+  terracota: '#EA580C',
+  terracotaDeep: '#C2410C',
+  terracotaFaint: '#1A0C07',
+  brandBlue: '#3291FF',
+  success: '#22C55E',
+  successBg: '#031a0d',
+  warning: '#F59E0B',
+  warningBg: '#1c1007',
+  error: '#EF4444',
+} as const;
+
+export const AVATAR_COLORS = [
+  '#8B5CF6',
+  '#0EA5E9',
+  '#10B981',
+  '#F59E0B',
+  '#EF4444',
+  '#EC4899',
+  '#6366F1',
+  '#14B8A6',
+];

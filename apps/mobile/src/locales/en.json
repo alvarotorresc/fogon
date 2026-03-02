@@ -1,0 +1,90 @@
+{
+  "app_name": "Fogon",
+  "auth": {
+    "login": "Sign in",
+    "register": "Create account",
+    "email": "Email",
+    "password": "Password",
+    "name": "Your name",
+    "login_title": "Welcome to Fogon",
+    "register_title": "Create your account",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?",
+    "forgot_password": "Forgot your password?",
+    "continue": "Continue"
+  },
+  "household": {
+    "create": "Create household",
+    "join": "Join with code",
+    "name": "Household name",
+    "invite_code": "Invite code",
+    "invite_share": "Share this code",
+    "members": "Members"
+  },
+  "tabs": {
+    "list": "List",
+    "menu": "Menu",
+    "pantry": "Pantry",
+    "home": "Home"
+  },
+  "shopping": {
+    "title": "Shopping list",
+    "add_item": "Add item",
+    "clear_done": "Clear purchased",
+    "empty": "Your list is empty",
+    "realtime_sync": "Synced",
+    "done_by": "Marked by {{name}}",
+    "categories": {
+      "frutas": "Fruits & veggies",
+      "lacteos": "Dairy",
+      "carnes": "Meat & fish",
+      "panaderia": "Bakery",
+      "conservas": "Canned goods",
+      "limpieza": "Cleaning",
+      "otros": "Other"
+    }
+  },
+  "pantry": {
+    "title": "Pantry",
+    "add_item": "Add item",
+    "empty": "Your pantry is empty",
+    "stock": {
+      "ok": "Good",
+      "low": "Low",
+      "empty": "Empty"
+    }
+  },
+  "recipes": {
+    "title": "Recipes",
+    "fogon_collection": "Fogon Collection",
+    "my_recipes": "My recipes",
+    "add_recipe": "New recipe",
+    "ingredients": "Ingredients",
+    "steps": "Steps",
+    "prep_time": "{{minutes}} min",
+    "share": "Share recipe",
+    "empty": "No recipes yet"
+  },
+  "menu": {
+    "title": "Weekly menu",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "assign_recipe": "Assign recipe",
+    "clear_slot": "Clear slot"
+  },
+  "hogar": {
+    "title": "Home",
+    "invite": "Invite member",
+    "leave": "Leave household"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry"
+  }
+}
