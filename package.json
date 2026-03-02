@@ -1,0 +1,21 @@
+{
+  "name": "fogon-app",
+  "private": true,
+  "scripts": {
+    "dev:mobile": "pnpm --filter @fogon/mobile dev",
+    "dev:api": "pnpm --filter @fogon/api dev",
+    "dev:landing": "pnpm --filter @fogon/landing dev",
+    "build:mobile": "pnpm --filter @fogon/mobile build",
+    "build:api": "pnpm --filter @fogon/api build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "eslint": "^9.18.0",
+    "typescript": "^5.7.3",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0"
+  }
+}
