@@ -22,7 +22,10 @@ function getWeekStart(offset = 0): string {
   const day = now.getDay();
   const diff = now.getDate() - day + (day === 0 ? -6 : 1) + offset * 7;
   const monday = new Date(now.getFullYear(), now.getMonth(), diff);
-  return monday.toISOString().split('T')[0];
+  const y = monday.getFullYear();
+  const m = String(monday.getMonth() + 1).padStart(2, '0');
+  const d = String(monday.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 export function useMealPlan(weekOffset = 0) {

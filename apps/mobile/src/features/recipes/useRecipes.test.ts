@@ -1,4 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createElement, type ReactNode } from 'react';
 import { useCreateRecipe } from './useRecipes';
 
 const mockInsert = jest.fn();
@@ -46,32 +48,14 @@ jest.mock('@/store/householdStore', () => ({
   }),
 }));
 
-jest.mock('@tanstack/react-query', () => {
-  const actual = jest.requireActual('@tanstack/react-query');
-  const queryClient = new actual.QueryClient({
+function createWrapper() {
+  const qc = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-
-  return {
-    ...actual,
-    useQueryClient: () => queryClient,
-    useMutation: (opts: { mutationFn: (...args: unknown[]) => Promise<unknown>; onSuccess?: () => void }) => {
-      let isPending = false;
-      return {
-        mutateAsync: async (input: unknown) => {
-          isPending = true;
-          try {
-            await opts.mutationFn(input);
-            opts.onSuccess?.();
-          } finally {
-            isPending = false;
-          }
-        },
-        isPending,
-      };
-    },
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return createElement(QueryClientProvider, { client: qc }, children);
   };
-});
+}
 
 describe('useCreateRecipe', () => {
   beforeEach(() => {
@@ -83,11 +67,12 @@ describe('useCreateRecipe', () => {
     });
   });
 
-  it('inserts recipe with correct data', async () => {
-    const { result } = renderHook(() => useCreateRecipe());
+  it('should insert recipe with correct data', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useCreateRecipe(), { wrapper });
 
     await act(async () => {
-      await result.current.mutateAsync({
+      result.current.mutate({
         title: 'Pasta Carbonara',
         description: 'Classic Italian pasta',
         prepTimeMinutes: 30,
@@ -96,6 +81,8 @@ describe('useCreateRecipe', () => {
         steps: [{ description: 'Boil pasta' }],
       });
     });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(mockInsert).toHaveBeenCalledWith('recipes', {
       household_id: 'hh-123',
@@ -107,11 +94,12 @@ describe('useCreateRecipe', () => {
     });
   });
 
-  it('inserts ingredients with correct positions', async () => {
-    const { result } = renderHook(() => useCreateRecipe());
+  it('should insert ingredients with correct positions', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useCreateRecipe(), { wrapper });
 
     await act(async () => {
-      await result.current.mutateAsync({
+      result.current.mutate({
         title: 'Test Recipe',
         ingredients: [
           { name: 'Flour', quantity: '200', unit: 'g' },
@@ -121,22 +109,27 @@ describe('useCreateRecipe', () => {
       });
     });
 
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
     expect(mockInsert).toHaveBeenCalledWith('recipe_ingredients', [
       { recipe_id: 'recipe-1', name: 'Flour', quantity: '200', unit: 'g', position: 0 },
       { recipe_id: 'recipe-1', name: 'Sugar', quantity: '100', unit: 'g', position: 1 },
     ]);
   });
 
-  it('inserts steps with correct step numbers', async () => {
-    const { result } = renderHook(() => useCreateRecipe());
+  it('should insert steps with correct step numbers', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useCreateRecipe(), { wrapper });
 
     await act(async () => {
-      await result.current.mutateAsync({
+      result.current.mutate({
         title: 'Test Recipe',
         ingredients: [],
         steps: [{ description: 'Step one' }, { description: 'Step two' }],
       });
     });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(mockInsert).toHaveBeenCalledWith('recipe_steps', [
       { recipe_id: 'recipe-1', step_number: 1, description: 'Step one' },
@@ -144,37 +137,46 @@ describe('useCreateRecipe', () => {
     ]);
   });
 
-  it('skips ingredients insert when list is empty', async () => {
-    const { result } = renderHook(() => useCreateRecipe());
+  it('should skip ingredients insert when list is empty', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useCreateRecipe(), { wrapper });
 
     await act(async () => {
-      await result.current.mutateAsync({
+      result.current.mutate({
         title: 'Minimal Recipe',
         ingredients: [],
         steps: [],
       });
     });
 
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
     expect(mockInsert).toHaveBeenCalledTimes(1);
-    expect(mockInsert).toHaveBeenCalledWith('recipes', expect.objectContaining({ title: 'Minimal Recipe' }));
+    expect(mockInsert).toHaveBeenCalledWith(
+      'recipes',
+      expect.objectContaining({ title: 'Minimal Recipe' }),
+    );
   });
 
-  it('throws when recipe insert fails', async () => {
+  it('should throw when recipe insert fails', async () => {
     mockSingle.mockResolvedValue({
       data: null,
       error: { message: 'Insert failed' },
     });
 
-    const { result } = renderHook(() => useCreateRecipe());
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useCreateRecipe(), { wrapper });
 
-    await expect(
-      act(async () => {
-        await result.current.mutateAsync({
-          title: 'Bad Recipe',
-          ingredients: [],
-          steps: [],
-        });
-      }),
-    ).rejects.toEqual(expect.objectContaining({ message: 'Insert failed' }));
+    await act(async () => {
+      result.current.mutate({
+        title: 'Bad Recipe',
+        ingredients: [],
+        steps: [],
+      });
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+
+    expect(result.current.error).toEqual(expect.objectContaining({ message: 'Insert failed' }));
   });
 });

@@ -1,4 +1,6 @@
-import { renderHook, act } from '@testing-library/react-native';
+import { renderHook, act, waitFor } from '@testing-library/react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { createElement, type ReactNode } from 'react';
 import { useAssignMeal } from './useMealPlan';
 
 const mockUpsert = jest.fn();
@@ -36,30 +38,14 @@ jest.mock('@/store/householdStore', () => ({
   }),
 }));
 
-jest.mock('@tanstack/react-query', () => {
-  const actual = jest.requireActual('@tanstack/react-query');
-  const queryClient = new actual.QueryClient({
+function createWrapper() {
+  const qc = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-
-  return {
-    ...actual,
-    useQueryClient: () => queryClient,
-    useMutation: (opts: { mutationFn: (...args: unknown[]) => Promise<unknown>; onSuccess?: () => void }) => {
-      return {
-        mutate: async (input: unknown) => {
-          await opts.mutationFn(input);
-          opts.onSuccess?.();
-        },
-        mutateAsync: async (input: unknown) => {
-          await opts.mutationFn(input);
-          opts.onSuccess?.();
-        },
-        isPending: false,
-      };
-    },
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return createElement(QueryClientProvider, { client: qc }, children);
   };
-});
+}
 
 describe('useAssignMeal', () => {
   beforeEach(() => {
@@ -67,16 +53,19 @@ describe('useAssignMeal', () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
   });
 
-  it('upserts meal plan entry with recipe id', async () => {
-    const { result } = renderHook(() => useAssignMeal());
+  it('should upsert meal plan entry with recipe id', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useAssignMeal(), { wrapper });
 
     await act(async () => {
-      await result.current.mutateAsync({
+      result.current.mutate({
         dayOfWeek: 0,
         slot: 'lunch' as const,
         recipeId: 'recipe-abc',
       });
     });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(mockUpsert).toHaveBeenCalledWith(
       'meal_plan_entries',
@@ -92,16 +81,19 @@ describe('useAssignMeal', () => {
     );
   });
 
-  it('upserts meal plan entry with custom text', async () => {
-    const { result } = renderHook(() => useAssignMeal());
+  it('should upsert meal plan entry with custom text', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useAssignMeal(), { wrapper });
 
     await act(async () => {
-      await result.current.mutateAsync({
+      result.current.mutate({
         dayOfWeek: 3,
         slot: 'dinner' as const,
         customText: 'Pizza takeout',
       });
     });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(mockUpsert).toHaveBeenCalledWith(
       'meal_plan_entries',
@@ -117,34 +109,39 @@ describe('useAssignMeal', () => {
     );
   });
 
-  it('includes week_start in upsert', async () => {
-    const { result } = renderHook(() => useAssignMeal());
+  it('should include week_start in YYYY-MM-DD format', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useAssignMeal(), { wrapper });
 
     await act(async () => {
-      await result.current.mutateAsync({
+      result.current.mutate({
         dayOfWeek: 1,
         slot: 'lunch' as const,
         recipeId: 'recipe-xyz',
       });
     });
 
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
     const upsertData = mockUpsert.mock.calls[0][1];
     expect(upsertData).toHaveProperty('week_start');
     expect(typeof upsertData.week_start).toBe('string');
-    // week_start should be a date string like YYYY-MM-DD
     expect(upsertData.week_start).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
-  it('sets recipe_id to null when only custom text is provided', async () => {
-    const { result } = renderHook(() => useAssignMeal());
+  it('should set recipe_id to null when only custom text is provided', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useAssignMeal(), { wrapper });
 
     await act(async () => {
-      await result.current.mutateAsync({
+      result.current.mutate({
         dayOfWeek: 5,
         slot: 'dinner' as const,
         customText: 'Leftovers',
       });
     });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     const upsertData = mockUpsert.mock.calls[0][1];
     expect(upsertData.recipe_id).toBeNull();
