@@ -1,13 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { ValidationPipe } from '@nestjs/common';
+import helmet from '@fastify/helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
+  await app.register(helmet);
+
   app.enableCors({
-    origin: [/localhost/, /fogon\.app$/],
+    origin: [/^https?:\/\/localhost(:\d+)?$/, /fogon\.app$/],
     credentials: true,
   });
 
