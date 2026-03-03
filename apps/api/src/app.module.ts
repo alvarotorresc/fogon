@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { HouseholdModule } from './household/household.module';
 import { PantryModule } from './pantry/pantry.module';
+import { RecipeModule } from './recipe/recipe.module';
 import { ShoppingModule } from './shopping/shopping.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { JwtAuthGuard } from './auth/auth.guard';
@@ -17,6 +18,7 @@ import { GlobalExceptionFilter } from './common/http-exception.filter';
     HouseholdModule,
     ShoppingModule,
     PantryModule,
+    RecipeModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
