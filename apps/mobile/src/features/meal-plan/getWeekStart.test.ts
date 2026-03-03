@@ -1,9 +1,10 @@
 import { getWeekStart } from './useMealPlan';
 
-jest.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: jest.fn(),
-    auth: { getUser: jest.fn() },
+jest.mock('@/lib/api', () => ({
+  api: {
+    get: jest.fn(),
+    post: jest.fn(),
+    delete: jest.fn(),
   },
 }));
 
