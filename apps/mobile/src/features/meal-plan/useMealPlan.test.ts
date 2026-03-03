@@ -1,34 +1,16 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement, type ReactNode } from 'react';
-import { useAssignMeal } from './useMealPlan';
+import { useAssignMeal, useClearMealSlot } from './useMealPlan';
 
-const mockUpsert = jest.fn();
-const mockGetUser = jest.fn();
+const mockPost = jest.fn().mockResolvedValue({ data: { data: null } });
+const mockDelete = jest.fn().mockResolvedValue({ data: { data: null } });
 
-jest.mock('@/lib/supabase', () => ({
-  supabase: {
-    auth: {
-      getUser: () => mockGetUser(),
-    },
-    from: (table: string) => ({
-      upsert: (data: unknown, opts: unknown) => {
-        mockUpsert(table, data, opts);
-        return Promise.resolve({ error: null });
-      },
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          eq: jest.fn().mockReturnValue({
-            order: jest.fn().mockReturnValue({
-              order: jest.fn().mockResolvedValue({ data: [], error: null }),
-            }),
-          }),
-        }),
-      }),
-      delete: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ error: null }),
-      }),
-    }),
+jest.mock('@/lib/api', () => ({
+  api: {
+    get: jest.fn().mockResolvedValue({ data: { data: [] } }),
+    post: (...args: unknown[]) => mockPost(...args),
+    delete: (...args: unknown[]) => mockDelete(...args),
   },
 }));
 
@@ -48,12 +30,9 @@ function createWrapper() {
 }
 
 describe('useAssignMeal', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
-  });
+  beforeEach(() => jest.clearAllMocks());
 
-  it('should upsert meal plan entry with recipe id', async () => {
+  it('should post meal assignment with recipe id', async () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useAssignMeal(), { wrapper });
 
@@ -67,21 +46,17 @@ describe('useAssignMeal', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockUpsert).toHaveBeenCalledWith(
-      'meal_plan_entries',
+    expect(mockPost).toHaveBeenCalledWith(
+      '/households/hh-456/meal-plan',
       expect.objectContaining({
-        household_id: 'hh-456',
-        day_of_week: 0,
+        dayOfWeek: 0,
         slot: 'lunch',
-        recipe_id: 'recipe-abc',
-        custom_text: null,
-        created_by: 'user-1',
+        recipeId: 'recipe-abc',
       }),
-      { onConflict: 'household_id,week_start,day_of_week,slot' },
     );
   });
 
-  it('should upsert meal plan entry with custom text', async () => {
+  it('should post meal assignment with custom text', async () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useAssignMeal(), { wrapper });
 
@@ -95,21 +70,17 @@ describe('useAssignMeal', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockUpsert).toHaveBeenCalledWith(
-      'meal_plan_entries',
+    expect(mockPost).toHaveBeenCalledWith(
+      '/households/hh-456/meal-plan',
       expect.objectContaining({
-        household_id: 'hh-456',
-        day_of_week: 3,
+        dayOfWeek: 3,
         slot: 'dinner',
-        recipe_id: null,
-        custom_text: 'Pizza takeout',
-        created_by: 'user-1',
+        customText: 'Pizza takeout',
       }),
-      { onConflict: 'household_id,week_start,day_of_week,slot' },
     );
   });
 
-  it('should include week_start in YYYY-MM-DD format', async () => {
+  it('should include weekStart in YYYY-MM-DD format', async () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useAssignMeal(), { wrapper });
 
@@ -123,28 +94,26 @@ describe('useAssignMeal', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    const upsertData = mockUpsert.mock.calls[0][1];
-    expect(upsertData).toHaveProperty('week_start');
-    expect(typeof upsertData.week_start).toBe('string');
-    expect(upsertData.week_start).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    const body = mockPost.mock.calls[0][1];
+    expect(body).toHaveProperty('weekStart');
+    expect(typeof body.weekStart).toBe('string');
+    expect(body.weekStart).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
+});
 
-  it('should set recipe_id to null when only custom text is provided', async () => {
+describe('useClearMealSlot', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('should call DELETE for meal entry', async () => {
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useAssignMeal(), { wrapper });
+    const { result } = renderHook(() => useClearMealSlot(), { wrapper });
 
     await act(async () => {
-      result.current.mutate({
-        dayOfWeek: 5,
-        slot: 'dinner' as const,
-        customText: 'Leftovers',
-      });
+      result.current.mutate('mp-1');
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    const upsertData = mockUpsert.mock.calls[0][1];
-    expect(upsertData.recipe_id).toBeNull();
-    expect(upsertData.custom_text).toBe('Leftovers');
+    expect(mockDelete).toHaveBeenCalledWith('/households/hh-456/meal-plan/mp-1');
   });
 });
