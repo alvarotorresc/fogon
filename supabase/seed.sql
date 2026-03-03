@@ -10,13 +10,13 @@ insert into public.recipes (id, household_id, title, description, prep_time_minu
 values
   ('a1000000-0000-0000-0000-000000000001', NULL, 'Tortilla de patatas',        'La tortilla española clásica, jugosa por dentro y dorada por fuera.', 30, true, NULL, now()),
   ('a1000000-0000-0000-0000-000000000002', NULL, 'Gazpacho andaluz',           'Sopa fría de verano con tomates maduros y verduras frescas.',         20, true, NULL, now()),
-  ('a1000000-0000-0000-0000-000000000003', NULL, 'Pasta carbonara',            'Pasta italiana cremosa con panceta, huevo y parmesano.',              25, true, NULL, now()),
-  ('a1000000-0000-0000-0000-000000000004', NULL, 'Ensalada César',             'Ensalada clásica con pollo, crutones y aderezo césar.',               15, true, NULL, now()),
+  ('a1000000-0000-0000-0000-000000000003', NULL, 'Pasta aglio e olio',         'Pasta italiana rápida con ajo dorado, guindilla y perejil.',          15, true, NULL, now()),
+  ('a1000000-0000-0000-0000-000000000004', NULL, 'Ensalada mediterránea',      'Ensalada fresca con tomate, pepino, aceitunas y queso feta.',          10, true, NULL, now()),
   ('a1000000-0000-0000-0000-000000000005', NULL, 'Guacamole casero',           'Guacamole fresco y cremoso con aguacate, tomate y lima.',             10, true, NULL, now()),
   ('a1000000-0000-0000-0000-000000000006', NULL, 'Hummus casero',              'Crema de garbanzos suave con tahini, limón y comino.',                15, true, NULL, now()),
   ('a1000000-0000-0000-0000-000000000007', NULL, 'Sopa de tomate',             'Sopa cremosa de tomate con albahaca y un toque de nata.',             30, true, NULL, now()),
-  ('a1000000-0000-0000-0000-000000000008', NULL, 'Lentejas estofadas',         'Guiso tradicional de lentejas con chorizo y verduras.',               45, true, NULL, now()),
-  ('a1000000-0000-0000-0000-000000000009', NULL, 'Pollo al horno con limón',   'Contramuslos de pollo jugosos con limón, ajo y romero.',              60, true, NULL, now()),
+  ('a1000000-0000-0000-0000-000000000008', NULL, 'Lentejas con verduras',      'Guiso nutritivo de lentejas con zanahoria, tomate y especias.',       45, true, NULL, now()),
+  ('a1000000-0000-0000-0000-000000000009', NULL, 'Curry de garbanzos',         'Curry cremoso de garbanzos con leche de coco, espinacas y especias.', 35, true, NULL, now()),
   ('a1000000-0000-0000-0000-000000000010', NULL, 'Revuelto de champiñones',    'Revuelto esponjoso con champiñones salteados y ajo.',                 15, true, NULL, now()),
   ('a1000000-0000-0000-0000-000000000011', NULL, 'Tostadas de aguacate',       'Tostadas crujientes de masa madre con aguacate y tomate cherry.',     10, true, NULL, now()),
   ('a1000000-0000-0000-0000-000000000012', NULL, 'Arroz con leche',            'Postre tradicional cremoso con canela y piel de limón.',              40, true, NULL, now()),
@@ -56,25 +56,27 @@ values
   ('b1000000-0002-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000002', 'sal',              NULL,   'al gusto',6)
 on conflict (id) do nothing;
 
--- 3. Pasta carbonara
+-- 3. Pasta aglio e olio
 insert into public.recipe_ingredients (id, recipe_id, name, quantity, unit, position)
 values
   ('b1000000-0003-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000003', 'espaguetis',       '400', 'g',       0),
-  ('b1000000-0003-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000003', 'panceta',          '150', 'g',       1),
-  ('b1000000-0003-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000003', 'huevos',           '3',   'unidades',2),
-  ('b1000000-0003-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000003', 'queso parmesano',  '80',  'g',       3),
-  ('b1000000-0003-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000003', 'pimienta negra',   NULL,  'al gusto',4),
+  ('b1000000-0003-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000003', 'ajo',              '6',   'dientes', 1),
+  ('b1000000-0003-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000003', 'guindilla seca',   '1',   'unidad',  2),
+  ('b1000000-0003-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000003', 'aceite de oliva',  '80',  'ml',      3),
+  ('b1000000-0003-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000003', 'perejil fresco',   NULL,  'al gusto',4),
   ('b1000000-0003-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000003', 'sal',              NULL,  'al gusto',5)
 on conflict (id) do nothing;
 
--- 4. Ensalada César
+-- 4. Ensalada mediterránea
 insert into public.recipe_ingredients (id, recipe_id, name, quantity, unit, position)
 values
-  ('b1000000-0004-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000004', 'lechuga romana',   '1',   'unidad',  0),
-  ('b1000000-0004-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000004', 'pollo cocido',     '200', 'g',       1),
-  ('b1000000-0004-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000004', 'crutones',         NULL,  'al gusto',2),
-  ('b1000000-0004-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000004', 'queso parmesano',  NULL,  'al gusto',3),
-  ('b1000000-0004-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000004', 'salsa césar',      NULL,  'al gusto',4)
+  ('b1000000-0004-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000004', 'tomates',          '3',   'unidades', 0),
+  ('b1000000-0004-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000004', 'pepino',           '1',   'unidad',   1),
+  ('b1000000-0004-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000004', 'aceitunas negras', '100', 'g',        2),
+  ('b1000000-0004-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000004', 'queso feta',       '150', 'g',        3),
+  ('b1000000-0004-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000004', 'cebolla morada',   '½',   'unidad',   4),
+  ('b1000000-0004-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000004', 'aceite de oliva',  NULL,  'al gusto', 5),
+  ('b1000000-0004-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000004', 'orégano',          NULL,  'al gusto', 6)
 on conflict (id) do nothing;
 
 -- 5. Guacamole casero
@@ -111,29 +113,30 @@ values
   ('b1000000-0007-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000007', 'albahaca',            NULL,  'al gusto',5)
 on conflict (id) do nothing;
 
--- 8. Lentejas estofadas
+-- 8. Lentejas con verduras
 insert into public.recipe_ingredients (id, recipe_id, name, quantity, unit, position)
 values
-  ('b1000000-0008-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000008', 'lentejas',          '300', 'g',     0),
-  ('b1000000-0008-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000008', 'chorizo',           '150', 'g',     1),
-  ('b1000000-0008-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000008', 'zanahoria',         '2',   'unidades',2),
-  ('b1000000-0008-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000008', 'cebolla',           '1',   'unidad', 3),
-  ('b1000000-0008-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000008', 'ajo',               '2',   'dientes',4),
-  ('b1000000-0008-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000008', 'tomate triturado',  '200', 'g',     5),
-  ('b1000000-0008-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000008', 'pimentón',          NULL,  'al gusto',6),
+  ('b1000000-0008-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000008', 'lentejas',          '300', 'g',       0),
+  ('b1000000-0008-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000008', 'zanahoria',         '2',   'unidades',1),
+  ('b1000000-0008-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000008', 'cebolla',           '1',   'unidad',  2),
+  ('b1000000-0008-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000008', 'ajo',               '2',   'dientes', 3),
+  ('b1000000-0008-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000008', 'tomate triturado',  '200', 'g',       4),
+  ('b1000000-0008-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000008', 'pimentón',          NULL,  'al gusto',5),
+  ('b1000000-0008-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000008', 'comino',            NULL,  'al gusto',6),
   ('b1000000-0008-0000-0000-000000000008', 'a1000000-0000-0000-0000-000000000008', 'sal',               NULL,  'al gusto',7)
 on conflict (id) do nothing;
 
--- 9. Pollo al horno con limón
+-- 9. Curry de garbanzos
 insert into public.recipe_ingredients (id, recipe_id, name, quantity, unit, position)
 values
-  ('b1000000-0009-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000009', 'contramuslos de pollo','4', 'unidades',0),
-  ('b1000000-0009-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000009', 'limones',           '2',   'unidades',1),
-  ('b1000000-0009-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000009', 'ajo',               '4',   'dientes', 2),
-  ('b1000000-0009-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000009', 'romero',            NULL,  'al gusto',3),
-  ('b1000000-0009-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000009', 'aceite de oliva',   NULL,  'al gusto',4),
-  ('b1000000-0009-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000009', 'sal',               NULL,  'al gusto',5),
-  ('b1000000-0009-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000009', 'pimienta',          NULL,  'al gusto',6)
+  ('b1000000-0009-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000009', 'garbanzos cocidos', '400', 'g',       0),
+  ('b1000000-0009-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000009', 'leche de coco',     '400', 'ml',      1),
+  ('b1000000-0009-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000009', 'espinacas',         '200', 'g',       2),
+  ('b1000000-0009-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000009', 'cebolla',           '1',   'unidad',  3),
+  ('b1000000-0009-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000009', 'ajo',               '3',   'dientes', 4),
+  ('b1000000-0009-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000009', 'curry en polvo',    '2',   'cucharadas',5),
+  ('b1000000-0009-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000009', 'comino',            '1',   'cucharadita',6),
+  ('b1000000-0009-0000-0000-000000000008', 'a1000000-0000-0000-0000-000000000009', 'sal',               NULL,  'al gusto',7)
 on conflict (id) do nothing;
 
 -- 10. Revuelto de champiñones
@@ -285,22 +288,22 @@ values
   ('c1000000-0002-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000002', 4, 'Colar por un chino para eliminar pieles y pepitas. Refrigerar al menos 1 hora antes de servir.')
 on conflict (id) do nothing;
 
--- 3. Pasta carbonara
+-- 3. Pasta aglio e olio
 insert into public.recipe_steps (id, recipe_id, step_number, description)
 values
   ('c1000000-0003-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000003', 1, 'Cocer la pasta en agua con abundante sal según las instrucciones del paquete. Reservar un vaso de agua de cocción.'),
-  ('c1000000-0003-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000003', 2, 'Dorar la panceta en cubitos en una sartén sin aceite a fuego medio hasta que esté crujiente.'),
-  ('c1000000-0003-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000003', 3, 'Batir los huevos con el parmesano rallado y pimienta negra abundante en un bol.'),
-  ('c1000000-0003-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000003', 4, 'Mezclar la pasta caliente con la panceta fuera del fuego. Añadir la mezcla de huevo y remover rápido añadiendo agua de cocción hasta obtener una salsa cremosa.')
+  ('c1000000-0003-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000003', 2, 'Laminar los ajos finamente y dorarlos en el aceite a fuego medio-bajo con la guindilla troceada. Retirar cuando estén dorados (no quemados).'),
+  ('c1000000-0003-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000003', 3, 'Añadir la pasta escurrida a la sartén con el aceite de ajo. Agregar agua de cocción poco a poco y remover hasta ligar.'),
+  ('c1000000-0003-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000003', 4, 'Servir con perejil fresco picado por encima.')
 on conflict (id) do nothing;
 
--- 4. Ensalada César
+-- 4. Ensalada mediterránea
 insert into public.recipe_steps (id, recipe_id, step_number, description)
 values
-  ('c1000000-0004-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000004', 1, 'Lavar y centrifugar la lechuga romana. Trocear en piezas medianas.'),
-  ('c1000000-0004-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000004', 2, 'Cortar el pollo cocido en tiras y disponer sobre la lechuga.'),
-  ('c1000000-0004-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000004', 3, 'Añadir los crutones y el parmesano en lascas.'),
-  ('c1000000-0004-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000004', 4, 'Aliñar con salsa césar justo antes de servir.')
+  ('c1000000-0004-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000004', 1, 'Lavar y cortar los tomates en gajos. Pelar y cortar el pepino en rodajas.'),
+  ('c1000000-0004-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000004', 2, 'Cortar la cebolla morada en aros finos. Desmenuzar el queso feta en trozos.'),
+  ('c1000000-0004-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000004', 3, 'Disponer todos los ingredientes en un plato o bol. Añadir las aceitunas.'),
+  ('c1000000-0004-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000004', 4, 'Aliñar con aceite de oliva virgen extra y orégano. Servir fresca.')
 on conflict (id) do nothing;
 
 -- 5. Guacamole casero
@@ -330,22 +333,22 @@ values
   ('c1000000-0007-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000007', 4, 'Triturar hasta obtener una crema fina. Añadir la nata, rectificar de sal y servir con albahaca fresca.')
 on conflict (id) do nothing;
 
--- 8. Lentejas estofadas
+-- 8. Lentejas con verduras
 insert into public.recipe_steps (id, recipe_id, step_number, description)
 values
   ('c1000000-0008-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000008', 1, 'Enjuagar las lentejas. Sofreír la cebolla y el ajo picados en aceite hasta que estén blandos.'),
-  ('c1000000-0008-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000008', 2, 'Añadir el chorizo en rodajas y dorar ligeramente. Incorporar la zanahoria en rodajas.'),
-  ('c1000000-0008-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000008', 3, 'Agregar el tomate triturado y el pimentón. Cocinar 5 minutos. Añadir las lentejas y cubrir con agua.'),
+  ('c1000000-0008-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000008', 2, 'Incorporar la zanahoria en rodajas y cocinar 3 minutos.'),
+  ('c1000000-0008-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000008', 3, 'Agregar el tomate triturado, el pimentón y el comino. Cocinar 5 minutos. Añadir las lentejas y cubrir con agua.'),
   ('c1000000-0008-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000008', 4, 'Cocinar a fuego medio-bajo durante 30-35 minutos hasta que las lentejas estén tiernas. Rectificar de sal.')
 on conflict (id) do nothing;
 
--- 9. Pollo al horno con limón
+-- 9. Curry de garbanzos
 insert into public.recipe_steps (id, recipe_id, step_number, description)
 values
-  ('c1000000-0009-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000009', 1, 'Precalentar el horno a 200°C. Salpimentar los contramuslos y colocarlos en una bandeja.'),
-  ('c1000000-0009-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000009', 2, 'Exprimir un limón por encima del pollo. Cortar el otro limón en rodajas y colocarlas alrededor.'),
-  ('c1000000-0009-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000009', 3, 'Añadir los dientes de ajo enteros sin pelar y las ramas de romero. Rociar con aceite de oliva.'),
-  ('c1000000-0009-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000009', 4, 'Hornear 45-50 minutos hasta que el pollo esté dorado y los jugos salgan claros al pincharlo.')
+  ('c1000000-0009-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000009', 1, 'Sofreír la cebolla picada en aceite hasta que esté transparente. Añadir el ajo picado y cocinar 1 minuto.'),
+  ('c1000000-0009-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000009', 2, 'Añadir el curry en polvo y el comino. Tostar las especias 1 minuto removiendo.'),
+  ('c1000000-0009-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000009', 3, 'Incorporar los garbanzos escurridos y la leche de coco. Cocinar a fuego medio 15 minutos.'),
+  ('c1000000-0009-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000009', 4, 'Añadir las espinacas y cocinar 3-5 minutos hasta que se marchiten. Salar al gusto y servir con arroz.')
 on conflict (id) do nothing;
 
 -- 10. Revuelto de champiñones
