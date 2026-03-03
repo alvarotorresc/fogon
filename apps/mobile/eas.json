@@ -8,11 +8,21 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://sivgbndoyyvzxgcllvqr.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_5QIL4tSGw0DHp3ZgkJ6bQg_e6dX9Gpk",
+        "EXPO_PUBLIC_API_URL": "https://api-production-1b95.up.railway.app"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://sivgbndoyyvzxgcllvqr.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_5QIL4tSGw0DHp3ZgkJ6bQg_e6dX9Gpk",
+        "EXPO_PUBLIC_API_URL": "https://api-production-1b95.up.railway.app"
       }
     }
   }
