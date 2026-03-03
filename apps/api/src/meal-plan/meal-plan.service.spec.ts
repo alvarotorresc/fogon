@@ -136,15 +136,17 @@ describe('MealPlanService', () => {
   });
 
   describe('remove', () => {
-    it('deletes entry by id', async () => {
-      const mockEq = jest.fn().mockReturnValue({ error: null });
-      const mockDelete = jest.fn().mockReturnValue({ eq: mockEq });
+    it('deletes entry scoped to household', async () => {
+      const mockEqHousehold = jest.fn().mockReturnValue({ error: null });
+      const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+      const mockDelete = jest.fn().mockReturnValue({ eq: mockEqId });
       mockFrom.mockReturnValue({ delete: mockDelete });
 
-      await service.remove('mp-1');
+      await service.remove('h-1', 'mp-1');
 
       expect(mockFrom).toHaveBeenCalledWith('meal_plan_entries');
-      expect(mockEq).toHaveBeenCalledWith('id', 'mp-1');
+      expect(mockEqId).toHaveBeenCalledWith('id', 'mp-1');
+      expect(mockEqHousehold).toHaveBeenCalledWith('household_id', 'h-1');
     });
   });
 });

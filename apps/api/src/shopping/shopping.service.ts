@@ -49,7 +49,7 @@ export class ShoppingService {
     if (error) throw new Error(error.message);
   }
 
-  async toggle(itemId: string, userId: string, isDone: boolean) {
+  async toggle(householdId: string, itemId: string, userId: string, isDone: boolean) {
     const { error } = await this.supabase
       .from('shopping_items')
       .update({
@@ -57,7 +57,8 @@ export class ShoppingService {
         done_by: isDone ? userId : null,
         done_at: isDone ? new Date().toISOString() : null,
       })
-      .eq('id', itemId);
+      .eq('id', itemId)
+      .eq('household_id', householdId);
 
     if (error) throw new Error(error.message);
   }

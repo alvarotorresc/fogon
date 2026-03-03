@@ -94,30 +94,34 @@ describe('PantryService', () => {
   });
 
   describe('updateStockLevel', () => {
-    it('updates stock level and timestamp', async () => {
-      const mockEq = jest.fn().mockReturnValue({ error: null });
-      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
+    it('updates stock level and timestamp, scoped to household', async () => {
+      const mockEqHousehold = jest.fn().mockReturnValue({ error: null });
+      const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
       mockFrom.mockReturnValue({ update: mockUpdate });
 
-      await service.updateStockLevel('p-1', 'low');
+      await service.updateStockLevel('h-1', 'p-1', 'low');
 
       expect(mockUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ stock_level: 'low' }),
       );
-      expect(mockEq).toHaveBeenCalledWith('id', 'p-1');
+      expect(mockEqId).toHaveBeenCalledWith('id', 'p-1');
+      expect(mockEqHousehold).toHaveBeenCalledWith('household_id', 'h-1');
     });
   });
 
   describe('remove', () => {
-    it('deletes item by id', async () => {
-      const mockEq = jest.fn().mockReturnValue({ error: null });
-      const mockDelete = jest.fn().mockReturnValue({ eq: mockEq });
+    it('deletes item scoped to household', async () => {
+      const mockEqHousehold = jest.fn().mockReturnValue({ error: null });
+      const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+      const mockDelete = jest.fn().mockReturnValue({ eq: mockEqId });
       mockFrom.mockReturnValue({ delete: mockDelete });
 
-      await service.remove('p-1');
+      await service.remove('h-1', 'p-1');
 
       expect(mockFrom).toHaveBeenCalledWith('pantry_items');
-      expect(mockEq).toHaveBeenCalledWith('id', 'p-1');
+      expect(mockEqId).toHaveBeenCalledWith('id', 'p-1');
+      expect(mockEqHousehold).toHaveBeenCalledWith('household_id', 'h-1');
     });
   });
 });

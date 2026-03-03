@@ -62,11 +62,12 @@ export class MealPlanService {
     if (error) throw new Error(error.message);
   }
 
-  async remove(entryId: string) {
+  async remove(householdId: string, entryId: string) {
     const { error } = await this.supabase
       .from('meal_plan_entries')
       .delete()
-      .eq('id', entryId);
+      .eq('id', entryId)
+      .eq('household_id', householdId);
 
     if (error) throw new Error(error.message);
   }

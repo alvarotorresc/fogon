@@ -141,12 +141,13 @@ describe('ShoppingService', () => {
   });
 
   describe('toggle', () => {
-    it('updates item to done with userId and timestamp', async () => {
-      const mockEq = jest.fn().mockReturnValue({ error: null });
-      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
+    it('updates item to done with userId and timestamp, scoped to household', async () => {
+      const mockEqHousehold = jest.fn().mockReturnValue({ error: null });
+      const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
       mockFrom.mockReturnValue({ update: mockUpdate });
 
-      await service.toggle('item-1', 'user-1', true);
+      await service.toggle('h-1', 'item-1', 'user-1', true);
 
       expect(mockFrom).toHaveBeenCalledWith('shopping_items');
       expect(mockUpdate).toHaveBeenCalledWith(
@@ -155,22 +156,26 @@ describe('ShoppingService', () => {
           done_by: 'user-1',
         }),
       );
+      expect(mockEqId).toHaveBeenCalledWith('id', 'item-1');
+      expect(mockEqHousehold).toHaveBeenCalledWith('household_id', 'h-1');
       const call = mockUpdate.mock.calls[0][0];
       expect(call.done_at).toBeDefined();
     });
 
-    it('clears done fields when toggling off', async () => {
-      const mockEq = jest.fn().mockReturnValue({ error: null });
-      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
+    it('clears done fields when toggling off, scoped to household', async () => {
+      const mockEqHousehold = jest.fn().mockReturnValue({ error: null });
+      const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
       mockFrom.mockReturnValue({ update: mockUpdate });
 
-      await service.toggle('item-1', 'user-1', false);
+      await service.toggle('h-1', 'item-1', 'user-1', false);
 
       expect(mockUpdate).toHaveBeenCalledWith({
         is_done: false,
         done_by: null,
         done_at: null,
       });
+      expect(mockEqHousehold).toHaveBeenCalledWith('household_id', 'h-1');
     });
   });
 

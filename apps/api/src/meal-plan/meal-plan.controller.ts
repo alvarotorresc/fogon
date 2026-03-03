@@ -32,8 +32,11 @@ export class MealPlanController {
   }
 
   @Delete(':entryId')
-  async remove(@Param('entryId') entryId: string) {
-    await this.mealPlanService.remove(entryId);
+  async remove(
+    @Param('householdId') householdId: string,
+    @Param('entryId') entryId: string,
+  ) {
+    await this.mealPlanService.remove(householdId, entryId);
     return { data: null };
   }
 }

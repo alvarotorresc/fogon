@@ -49,20 +49,26 @@ export class PantryService {
     if (error) throw new Error(error.message);
   }
 
-  async updateStockLevel(itemId: string, stockLevel: string) {
+  async updateStockLevel(householdId: string, itemId: string, stockLevel: string) {
     const { error } = await this.supabase
       .from('pantry_items')
       .update({
         stock_level: stockLevel,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', itemId);
+      .eq('id', itemId)
+      .eq('household_id', householdId);
 
     if (error) throw new Error(error.message);
   }
 
-  async remove(itemId: string) {
-    const { error } = await this.supabase.from('pantry_items').delete().eq('id', itemId);
+  async remove(householdId: string, itemId: string) {
+    const { error } = await this.supabase
+      .from('pantry_items')
+      .delete()
+      .eq('id', itemId)
+      .eq('household_id', householdId);
+
     if (error) throw new Error(error.message);
   }
 }

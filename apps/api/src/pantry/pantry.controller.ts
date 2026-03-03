@@ -38,16 +38,20 @@ export class PantryController {
 
   @Patch(':itemId/stock')
   async updateStock(
+    @Param('householdId') householdId: string,
     @Param('itemId') itemId: string,
     @Body() dto: UpdateStockLevelDto,
   ) {
-    await this.pantryService.updateStockLevel(itemId, dto.stockLevel);
+    await this.pantryService.updateStockLevel(householdId, itemId, dto.stockLevel);
     return { data: null };
   }
 
   @Delete(':itemId')
-  async remove(@Param('itemId') itemId: string) {
-    await this.pantryService.remove(itemId);
+  async remove(
+    @Param('householdId') householdId: string,
+    @Param('itemId') itemId: string,
+  ) {
+    await this.pantryService.remove(householdId, itemId);
     return { data: null };
   }
 }

@@ -22,11 +22,12 @@ export class RecipeService {
     return (data ?? []).map((row) => this.mapRecipe(row));
   }
 
-  async findById(recipeId: string) {
+  async findById(householdId: string, recipeId: string) {
     const { data, error } = await this.supabase
       .from('recipes')
       .select('*, recipe_ingredients(*), recipe_steps(*)')
       .eq('id', recipeId)
+      .or(`household_id.is.null,household_id.eq.${householdId}`)
       .single();
 
     if (error || !data) throw new NotFoundException('Recipe not found');

@@ -98,45 +98,49 @@ describe('RecipeService', () => {
   });
 
   describe('findById', () => {
-    it('returns a single recipe', async () => {
+    it('returns a single recipe scoped to household', async () => {
       mockFrom.mockReturnValue({
         select: () => ({
           eq: () => ({
-            single: () => ({
-              data: {
-                id: 'r-1',
-                title: 'Test',
-                description: null,
-                prep_time_minutes: null,
-                image_url: null,
-                is_public: false,
-                household_id: 'h-1',
-                recipe_ingredients: [],
-                recipe_steps: [],
-              },
-              error: null,
+            or: () => ({
+              single: () => ({
+                data: {
+                  id: 'r-1',
+                  title: 'Test',
+                  description: null,
+                  prep_time_minutes: null,
+                  image_url: null,
+                  is_public: false,
+                  household_id: 'h-1',
+                  recipe_ingredients: [],
+                  recipe_steps: [],
+                },
+                error: null,
+              }),
             }),
           }),
         }),
       });
 
-      const result = await service.findById('r-1');
+      const result = await service.findById('h-1', 'r-1');
       expect(result.id).toBe('r-1');
     });
 
-    it('throws NotFoundException when recipe not found', async () => {
+    it('throws NotFoundException when recipe not found or not in household', async () => {
       mockFrom.mockReturnValue({
         select: () => ({
           eq: () => ({
-            single: () => ({
-              data: null,
-              error: { code: 'PGRST116' },
+            or: () => ({
+              single: () => ({
+                data: null,
+                error: { code: 'PGRST116' },
+              }),
             }),
           }),
         }),
       });
 
-      await expect(service.findById('bad-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findById('h-1', 'bad-id')).rejects.toThrow(NotFoundException);
     });
   });
 

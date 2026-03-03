@@ -37,11 +37,12 @@ export class ShoppingController {
 
   @Patch(':itemId/toggle')
   async toggle(
+    @Param('householdId') householdId: string,
     @Param('itemId') itemId: string,
     @Body() dto: ToggleShoppingItemDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    await this.shoppingService.toggle(itemId, req.userId, dto.isDone);
+    await this.shoppingService.toggle(householdId, itemId, req.userId, dto.isDone);
     return { data: null };
   }
 

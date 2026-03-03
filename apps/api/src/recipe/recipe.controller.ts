@@ -19,8 +19,11 @@ export class RecipeController {
   }
 
   @Get(':recipeId')
-  async findById(@Param('recipeId') recipeId: string) {
-    const recipe = await this.recipeService.findById(recipeId);
+  async findById(
+    @Param('householdId') householdId: string,
+    @Param('recipeId') recipeId: string,
+  ) {
+    const recipe = await this.recipeService.findById(householdId, recipeId);
     return { data: recipe };
   }
 
