@@ -35,6 +35,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "57ca66de-17eb-41ee-a82c-1802eed35826"
+      }
+    },
+    "owner": "alvarotorrescarrasco"
   }
 }
