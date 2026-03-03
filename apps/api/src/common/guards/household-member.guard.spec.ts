@@ -1,6 +1,9 @@
-import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { HouseholdMemberGuard } from './household-member.guard';
 import { SupabaseService } from '../../supabase/supabase.service';
+
+const VALID_HID = '00000000-0000-0000-0000-000000000001';
+const VALID_UID = '00000000-0000-0000-0000-000000000099';
 
 describe('HouseholdMemberGuard', () => {
   let guard: HouseholdMemberGuard;
@@ -30,8 +33,13 @@ describe('HouseholdMemberGuard', () => {
   });
 
   it('throws ForbiddenException when userId is missing from request', async () => {
-    const context = createMockContext({ householdId: 'h-1' }, undefined);
+    const context = createMockContext({ householdId: VALID_HID }, undefined);
     await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+  });
+
+  it('throws BadRequestException when householdId is not a valid UUID', async () => {
+    const context = createMockContext({ householdId: 'not-a-uuid' }, VALID_UID);
+    await expect(guard.canActivate(context)).rejects.toThrow(BadRequestException);
   });
 
   it('throws ForbiddenException when user is not a member of the household', async () => {
@@ -45,7 +53,7 @@ describe('HouseholdMemberGuard', () => {
       }),
     });
 
-    const context = createMockContext({ householdId: 'h-1' }, 'user-1');
+    const context = createMockContext({ householdId: VALID_HID }, VALID_UID);
     await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
   });
 
@@ -55,7 +63,7 @@ describe('HouseholdMemberGuard', () => {
         eq: () => ({
           eq: () => ({
             single: () => ({
-              data: { id: 'member-1', household_id: 'h-1', user_id: 'user-1' },
+              data: { id: 'member-1', household_id: VALID_HID, user_id: VALID_UID },
               error: null,
             }),
           }),
@@ -63,7 +71,7 @@ describe('HouseholdMemberGuard', () => {
       }),
     });
 
-    const context = createMockContext({ householdId: 'h-1' }, 'user-1');
+    const context = createMockContext({ householdId: VALID_HID }, VALID_UID);
     const result = await guard.canActivate(context);
     expect(result).toBe(true);
   });
@@ -79,12 +87,14 @@ describe('HouseholdMemberGuard', () => {
     const mockSelect = jest.fn().mockReturnValue({ eq: mockEqHouseholdId });
     mockFrom.mockReturnValue({ select: mockSelect });
 
-    const context = createMockContext({ householdId: 'h-42' }, 'user-99');
+    const hid = '11111111-1111-1111-1111-111111111111';
+    const uid = '22222222-2222-2222-2222-222222222222';
+    const context = createMockContext({ householdId: hid }, uid);
     await guard.canActivate(context);
 
     expect(mockFrom).toHaveBeenCalledWith('household_members');
     expect(mockSelect).toHaveBeenCalledWith('id');
-    expect(mockEqHouseholdId).toHaveBeenCalledWith('household_id', 'h-42');
-    expect(mockEqUserId).toHaveBeenCalledWith('user_id', 'user-99');
+    expect(mockEqHouseholdId).toHaveBeenCalledWith('household_id', hid);
+    expect(mockEqUserId).toHaveBeenCalledWith('user_id', uid);
   });
 });

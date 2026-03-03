@@ -1,5 +1,13 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @Injectable()
 export class HouseholdMemberGuard implements CanActivate {
@@ -12,6 +20,10 @@ export class HouseholdMemberGuard implements CanActivate {
 
     if (!householdId || !userId) {
       throw new ForbiddenException('Access denied');
+    }
+
+    if (!UUID_RE.test(householdId)) {
+      throw new BadRequestException('Invalid household ID format');
     }
 
     const supabase = this.supabaseService.getClient();
