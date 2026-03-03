@@ -1,0 +1,191 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { ShoppingService } from './shopping.service';
+import { SupabaseService } from '../supabase/supabase.service';
+
+const mockFrom = jest.fn();
+
+describe('ShoppingService', () => {
+  let service: ShoppingService;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ShoppingService,
+        {
+          provide: SupabaseService,
+          useValue: {
+            getClient: () => ({ from: mockFrom }),
+          },
+        },
+      ],
+    }).compile();
+
+    service = module.get<ShoppingService>(ShoppingService);
+  });
+
+  describe('findAll', () => {
+    it('returns mapped shopping items', async () => {
+      mockFrom.mockReturnValue({
+        select: () => ({
+          eq: () => ({
+            order: () => ({
+              data: [
+                {
+                  id: 'item-1',
+                  name: 'Milk',
+                  quantity: '2L',
+                  category: 'lacteos',
+                  is_done: false,
+                  done_by: null,
+                  added_by: 'user-1',
+                  created_at: '2026-03-01',
+                  members: [{ display_name: 'Alice', user_id: 'user-1' }],
+                },
+              ],
+              error: null,
+            }),
+          }),
+        }),
+      });
+
+      const result = await service.findAll('h-1');
+
+      expect(result).toEqual([
+        {
+          id: 'item-1',
+          name: 'Milk',
+          quantity: '2L',
+          category: 'lacteos',
+          isDone: false,
+          doneByName: null,
+          addedByName: 'Alice',
+          createdAt: '2026-03-01',
+        },
+      ]);
+    });
+
+    it('resolves doneByName when item is done', async () => {
+      mockFrom.mockReturnValue({
+        select: () => ({
+          eq: () => ({
+            order: () => ({
+              data: [
+                {
+                  id: 'item-2',
+                  name: 'Bread',
+                  quantity: null,
+                  category: 'panaderia',
+                  is_done: true,
+                  done_by: 'user-2',
+                  added_by: 'user-1',
+                  created_at: '2026-03-01',
+                  members: [
+                    { display_name: 'Alice', user_id: 'user-1' },
+                    { display_name: 'Bob', user_id: 'user-2' },
+                  ],
+                },
+              ],
+              error: null,
+            }),
+          }),
+        }),
+      });
+
+      const result = await service.findAll('h-1');
+      expect(result[0].doneByName).toBe('Bob');
+    });
+
+    it('throws on supabase error', async () => {
+      mockFrom.mockReturnValue({
+        select: () => ({
+          eq: () => ({
+            order: () => ({
+              data: null,
+              error: { message: 'Query failed' },
+            }),
+          }),
+        }),
+      });
+
+      await expect(service.findAll('h-1')).rejects.toThrow('Query failed');
+    });
+  });
+
+  describe('create', () => {
+    it('inserts shopping item with correct data', async () => {
+      const mockInsert = jest.fn().mockReturnValue({ error: null });
+      mockFrom.mockReturnValue({ insert: mockInsert });
+
+      await service.create('h-1', 'user-1', 'Eggs', '12', 'basics');
+
+      expect(mockFrom).toHaveBeenCalledWith('shopping_items');
+      expect(mockInsert).toHaveBeenCalledWith({
+        household_id: 'h-1',
+        name: 'Eggs',
+        quantity: '12',
+        category: 'basics',
+        added_by: 'user-1',
+      });
+    });
+
+    it('throws on insert error', async () => {
+      mockFrom.mockReturnValue({
+        insert: () => ({ error: { message: 'Insert failed' } }),
+      });
+
+      await expect(service.create('h-1', 'user-1', 'Eggs', null, 'basics')).rejects.toThrow(
+        'Insert failed',
+      );
+    });
+  });
+
+  describe('toggle', () => {
+    it('updates item to done with userId and timestamp', async () => {
+      const mockEq = jest.fn().mockReturnValue({ error: null });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
+      mockFrom.mockReturnValue({ update: mockUpdate });
+
+      await service.toggle('item-1', 'user-1', true);
+
+      expect(mockFrom).toHaveBeenCalledWith('shopping_items');
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          is_done: true,
+          done_by: 'user-1',
+        }),
+      );
+      const call = mockUpdate.mock.calls[0][0];
+      expect(call.done_at).toBeDefined();
+    });
+
+    it('clears done fields when toggling off', async () => {
+      const mockEq = jest.fn().mockReturnValue({ error: null });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEq });
+      mockFrom.mockReturnValue({ update: mockUpdate });
+
+      await service.toggle('item-1', 'user-1', false);
+
+      expect(mockUpdate).toHaveBeenCalledWith({
+        is_done: false,
+        done_by: null,
+        done_at: null,
+      });
+    });
+  });
+
+  describe('clearDone', () => {
+    it('deletes done items for the household', async () => {
+      const mockEqDone = jest.fn().mockReturnValue({ error: null });
+      const mockEqHousehold = jest.fn().mockReturnValue({ eq: mockEqDone });
+      const mockDelete = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+      mockFrom.mockReturnValue({ delete: mockDelete });
+
+      await service.clearDone('h-1');
+
+      expect(mockFrom).toHaveBeenCalledWith('shopping_items');
+      expect(mockEqHousehold).toHaveBeenCalledWith('household_id', 'h-1');
+      expect(mockEqDone).toHaveBeenCalledWith('is_done', true);
+    });
+  });
+});
