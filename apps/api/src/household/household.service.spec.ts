@@ -236,4 +236,72 @@ describe('HouseholdService', () => {
       });
     });
   });
+
+  describe('findMembers', () => {
+    it('returns mapped members ordered by joined_at', async () => {
+      mockFrom.mockReturnValue({
+        select: () => ({
+          eq: () => ({
+            order: () => ({
+              data: [
+                {
+                  id: 'm-1',
+                  user_id: 'user-1',
+                  display_name: 'Alice',
+                  avatar_color: '#8B5CF6',
+                  role: 'owner',
+                  joined_at: '2026-01-01',
+                },
+                {
+                  id: 'm-2',
+                  user_id: 'user-2',
+                  display_name: 'Bob',
+                  avatar_color: '#3B82F6',
+                  role: 'member',
+                  joined_at: '2026-02-01',
+                },
+              ],
+              error: null,
+            }),
+          }),
+        }),
+      });
+
+      const result = await service.findMembers('h-1');
+
+      expect(result).toEqual([
+        {
+          id: 'm-1',
+          userId: 'user-1',
+          displayName: 'Alice',
+          avatarColor: '#8B5CF6',
+          role: 'owner',
+          joinedAt: '2026-01-01',
+        },
+        {
+          id: 'm-2',
+          userId: 'user-2',
+          displayName: 'Bob',
+          avatarColor: '#3B82F6',
+          role: 'member',
+          joinedAt: '2026-02-01',
+        },
+      ]);
+    });
+
+    it('throws on supabase error', async () => {
+      mockFrom.mockReturnValue({
+        select: () => ({
+          eq: () => ({
+            order: () => ({
+              data: null,
+              error: { message: 'Query failed' },
+            }),
+          }),
+        }),
+      });
+
+      await expect(service.findMembers('h-1')).rejects.toThrow('Query failed');
+    });
+  });
 });

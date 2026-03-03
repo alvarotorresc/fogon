@@ -84,4 +84,23 @@ export class HouseholdService {
       createdAt: household.created_at,
     };
   }
+
+  async findMembers(householdId: string) {
+    const { data, error } = await this.supabase
+      .from('household_members')
+      .select('*')
+      .eq('household_id', householdId)
+      .order('joined_at');
+
+    if (error) throw new Error(error.message);
+
+    return (data ?? []).map((row) => ({
+      id: row.id,
+      userId: row.user_id,
+      displayName: row.display_name,
+      avatarColor: row.avatar_color,
+      role: row.role,
+      joinedAt: row.joined_at,
+    }));
+  }
 }
