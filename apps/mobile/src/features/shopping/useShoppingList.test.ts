@@ -1,28 +1,18 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement, type ReactNode } from 'react';
-import { useAddShoppingItem, useToggleShoppingItem } from './useShoppingList';
+import { useAddShoppingItem, useToggleShoppingItem, useClearDoneItems } from './useShoppingList';
 
-const mockInsert = jest.fn().mockReturnValue({ error: null });
-const mockUpdate = jest.fn().mockReturnValue({ eq: jest.fn().mockReturnValue({ error: null }) });
-const mockGetUser = jest.fn().mockResolvedValue({
-  data: { user: { id: 'user-123' } },
-});
+const mockPost = jest.fn().mockResolvedValue({ data: { data: null } });
+const mockPatch = jest.fn().mockResolvedValue({ data: { data: null } });
+const mockDelete = jest.fn().mockResolvedValue({ data: { data: null } });
 
-jest.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      insert: mockInsert,
-      update: (payload: Record<string, unknown>) => {
-        mockUpdate(payload);
-        return {
-          eq: jest.fn().mockReturnValue({ error: null }),
-        };
-      },
-    })),
-    auth: {
-      getUser: () => mockGetUser(),
-    },
+jest.mock('@/lib/api', () => ({
+  api: {
+    get: jest.fn().mockResolvedValue({ data: { data: [] } }),
+    post: (...args: unknown[]) => mockPost(...args),
+    patch: (...args: unknown[]) => mockPatch(...args),
+    delete: (...args: unknown[]) => mockDelete(...args),
   },
 }));
 
@@ -44,7 +34,7 @@ function createWrapper() {
 describe('useAddShoppingItem', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('inserts with correct params', async () => {
+  it('calls API with correct params', async () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useAddShoppingItem(), { wrapper });
 
@@ -54,16 +44,14 @@ describe('useAddShoppingItem', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockInsert).toHaveBeenCalledWith({
-      household_id: 'household-abc',
+    expect(mockPost).toHaveBeenCalledWith('/households/household-abc/shopping', {
       name: 'Milk',
       quantity: '2L',
       category: 'lacteos',
-      added_by: 'user-123',
     });
   });
 
-  it('sets quantity to null when empty', async () => {
+  it('omits quantity when empty', async () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useAddShoppingItem(), { wrapper });
 
@@ -73,20 +61,18 @@ describe('useAddShoppingItem', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockInsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'Bread',
-        quantity: null,
-        category: 'panaderia',
-      }),
-    );
+    expect(mockPost).toHaveBeenCalledWith('/households/household-abc/shopping', {
+      name: 'Bread',
+      quantity: undefined,
+      category: 'panaderia',
+    });
   });
 });
 
 describe('useToggleShoppingItem', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('updates is_done, done_by, done_at when marking done', async () => {
+  it('calls PATCH with isDone true', async () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useToggleShoppingItem(), { wrapper });
 
@@ -96,19 +82,13 @@ describe('useToggleShoppingItem', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        is_done: true,
-        done_by: 'user-123',
-      }),
+    expect(mockPatch).toHaveBeenCalledWith(
+      '/households/household-abc/shopping/item-1/toggle',
+      { isDone: true },
     );
-
-    const call = mockUpdate.mock.calls[0][0];
-    expect(call.done_at).toBeDefined();
-    expect(typeof call.done_at).toBe('string');
   });
 
-  it('clears done_by and done_at when unmarking', async () => {
+  it('calls PATCH with isDone false', async () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useToggleShoppingItem(), { wrapper });
 
@@ -118,10 +98,26 @@ describe('useToggleShoppingItem', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockUpdate).toHaveBeenCalledWith({
-      is_done: false,
-      done_by: null,
-      done_at: null,
+    expect(mockPatch).toHaveBeenCalledWith(
+      '/households/household-abc/shopping/item-1/toggle',
+      { isDone: false },
+    );
+  });
+});
+
+describe('useClearDoneItems', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('calls DELETE on done endpoint', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useClearDoneItems(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate();
     });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(mockDelete).toHaveBeenCalledWith('/households/household-abc/shopping/done');
   });
 });

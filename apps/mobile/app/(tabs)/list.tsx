@@ -11,7 +11,6 @@ import {
   useToggleShoppingItem,
   useClearDoneItems,
 } from '@/features/shopping/useShoppingList';
-import { useRealtimeSync } from '@/features/shopping/useRealtimeSync';
 import { ShoppingItem } from '@/features/shopping/ShoppingItem';
 import { AddItemSheet } from '@/features/shopping/AddItemSheet';
 import type { ShoppingItem as ShoppingItemType } from '@fogon/types';
@@ -29,8 +28,6 @@ export default function ListScreen() {
   const toggleItem = useToggleShoppingItem();
   const clearDone = useClearDoneItems();
   const [sheetVisible, setSheetVisible] = useState(false);
-
-  useRealtimeSync();
 
   const sections = useMemo<Section[]>(() => {
     if (!items?.length) return [];
