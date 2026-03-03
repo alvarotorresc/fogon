@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { useHouseholdStore } from '@/store/householdStore';
 import type { PantryItem, StockLevel } from '@fogon/types';
 
@@ -12,23 +12,8 @@ export function usePantry() {
     queryKey: [QUERY_KEY, household?.id],
     queryFn: async (): Promise<PantryItem[]> => {
       if (!household) return [];
-
-      const { data, error } = await supabase
-        .from('pantry_items')
-        .select('*')
-        .eq('household_id', household.id)
-        .order('name');
-
-      if (error) throw error;
-
-      return (data ?? []).map((row) => ({
-        id: row.id,
-        name: row.name,
-        quantity: row.quantity,
-        category: row.category,
-        stockLevel: row.stock_level as StockLevel,
-        updatedAt: row.updated_at,
-      }));
+      const { data } = await api.get(`/households/${household.id}/pantry`);
+      return data.data;
     },
     enabled: !!household,
   });
@@ -50,20 +35,12 @@ export function useAddPantryItem() {
       category: string;
       stockLevel: StockLevel;
     }) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      const { error } = await supabase.from('pantry_items').insert({
-        household_id: household!.id,
+      await api.post(`/households/${household!.id}/pantry`, {
         name,
-        quantity: quantity || null,
+        quantity: quantity || undefined,
         category,
-        stock_level: stockLevel,
-        added_by: user!.id,
+        stockLevel,
       });
-
-      if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY] }),
   });
@@ -71,18 +48,11 @@ export function useAddPantryItem() {
 
 export function useUpdateStockLevel() {
   const qc = useQueryClient();
+  const { household } = useHouseholdStore();
 
   return useMutation({
     mutationFn: async ({ id, stockLevel }: { id: string; stockLevel: StockLevel }) => {
-      const { error } = await supabase
-        .from('pantry_items')
-        .update({
-          stock_level: stockLevel,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id);
-
-      if (error) throw error;
+      await api.patch(`/households/${household!.id}/pantry/${id}/stock`, { stockLevel });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY] }),
   });
@@ -90,11 +60,11 @@ export function useUpdateStockLevel() {
 
 export function useDeletePantryItem() {
   const qc = useQueryClient();
+  const { household } = useHouseholdStore();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('pantry_items').delete().eq('id', id);
-      if (error) throw error;
+      await api.delete(`/households/${household!.id}/pantry/${id}`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY] }),
   });

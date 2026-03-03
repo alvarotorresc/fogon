@@ -1,20 +1,17 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement, type ReactNode } from 'react';
-import { useUpdateStockLevel } from './usePantry';
+import { useUpdateStockLevel, useDeletePantryItem } from './usePantry';
 
-const mockUpdate = jest.fn();
+const mockPatch = jest.fn().mockResolvedValue({ data: { data: null } });
+const mockDelete = jest.fn().mockResolvedValue({ data: { data: null } });
 
-jest.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      update: (payload: Record<string, unknown>) => {
-        mockUpdate(payload);
-        return {
-          eq: jest.fn().mockReturnValue({ error: null }),
-        };
-      },
-    })),
+jest.mock('@/lib/api', () => ({
+  api: {
+    get: jest.fn().mockResolvedValue({ data: { data: [] } }),
+    post: jest.fn().mockResolvedValue({ data: { data: null } }),
+    patch: (...args: unknown[]) => mockPatch(...args),
+    delete: (...args: unknown[]) => mockDelete(...args),
   },
 }));
 
@@ -36,7 +33,7 @@ function createWrapper() {
 describe('useUpdateStockLevel', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('calls update with correct stock_level and updated_at', async () => {
+  it('calls PATCH with correct stock level', async () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useUpdateStockLevel(), { wrapper });
 
@@ -46,18 +43,13 @@ describe('useUpdateStockLevel', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        stock_level: 'low',
-      }),
+    expect(mockPatch).toHaveBeenCalledWith(
+      '/households/household-abc/pantry/pantry-1/stock',
+      { stockLevel: 'low' },
     );
-
-    const call = mockUpdate.mock.calls[0][0];
-    expect(call.updated_at).toBeDefined();
-    expect(typeof call.updated_at).toBe('string');
   });
 
-  it('updates to empty stock level', async () => {
+  it('calls PATCH with empty stock level', async () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useUpdateStockLevel(), { wrapper });
 
@@ -67,14 +59,13 @@ describe('useUpdateStockLevel', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        stock_level: 'empty',
-      }),
+    expect(mockPatch).toHaveBeenCalledWith(
+      '/households/household-abc/pantry/pantry-2/stock',
+      { stockLevel: 'empty' },
     );
   });
 
-  it('updates to ok stock level', async () => {
+  it('calls PATCH with ok stock level', async () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useUpdateStockLevel(), { wrapper });
 
@@ -84,10 +75,26 @@ describe('useUpdateStockLevel', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        stock_level: 'ok',
-      }),
+    expect(mockPatch).toHaveBeenCalledWith(
+      '/households/household-abc/pantry/pantry-3/stock',
+      { stockLevel: 'ok' },
     );
+  });
+});
+
+describe('useDeletePantryItem', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('calls DELETE with correct item id', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useDeletePantryItem(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate('pantry-1');
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(mockDelete).toHaveBeenCalledWith('/households/household-abc/pantry/pantry-1');
   });
 });
