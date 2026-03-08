@@ -42,6 +42,6 @@ describe('OfflineBanner', () => {
   it('should have alert accessibility role when offline', () => {
     mockIsConnected = false;
     render(<OfflineBanner />);
-    expect(screen.getByRole('alert')).toBeTruthy();
+    expect(screen.getByLabelText('Offline — showing cached data')).toBeTruthy();
   });
 });
