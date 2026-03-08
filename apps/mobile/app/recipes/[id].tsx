@@ -3,10 +3,10 @@ import { View, Text, ScrollView, ActivityIndicator, Pressable, Alert } from 'rea
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Image } from 'expo-image';
-import { ArrowLeft, Clock, Share2, ShoppingCart } from 'lucide-react-native';
+import { ArrowLeft, Clock, Share2, ShoppingCart, Pencil, Trash2 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
-import { useRecipes, useAddRecipeToShopping } from '@/features/recipes/useRecipes';
+import { useRecipes, useAddRecipeToShopping, useDeleteRecipe } from '@/features/recipes/useRecipes';
 
 function PlaceholderHero() {
   return (
@@ -52,6 +52,7 @@ export default function RecipeDetailScreen() {
   }
 
   const addToShopping = useAddRecipeToShopping();
+  const deleteRecipe = useDeleteRecipe();
   const [addedFeedback, setAddedFeedback] = useState<string | null>(null);
 
   const handleAddToShopping = () => {
@@ -73,6 +74,30 @@ export default function RecipeDetailScreen() {
         Alert.alert(t('common.error'));
       },
     });
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      t('common.delete'),
+      t('recipes.delete_confirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: () => {
+            deleteRecipe.mutate(recipe.id, {
+              onSuccess: () => router.back(),
+              onError: () => Alert.alert(t('common.error')),
+            });
+          },
+        },
+      ],
+    );
+  };
+
+  const handleEdit = () => {
+    router.push(`/recipes/edit?id=${recipe.id}`);
   };
 
   const handleShare = () => {
@@ -207,6 +232,43 @@ export default function RecipeDetailScreen() {
               {addedFeedback && (
                 <Text className="text-text-secondary text-sm text-center">{addedFeedback}</Text>
               )}
+            </View>
+          )}
+
+          {/* Edit / Delete buttons — only for household recipes */}
+          {!recipe.isCurated && (
+            <View className="flex-row gap-3 mt-2">
+              <Pressable
+                onPress={handleEdit}
+                className="flex-1 flex-row items-center justify-center gap-2 h-12 rounded-xl bg-bg-elevated border border-border"
+              >
+                {({ pressed }) => (
+                  <View className="flex-row items-center gap-2" style={{ opacity: pressed ? 0.7 : 1 }}>
+                    <Pencil size={18} color={COLORS.textPrimary} strokeWidth={1.5} />
+                    <Text className="text-text-primary font-semibold text-base">
+                      {t('common.edit')}
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+
+              <Pressable
+                onPress={handleDelete}
+                disabled={deleteRecipe.isPending}
+                className="flex-row items-center justify-center gap-2 h-12 rounded-xl bg-bg-elevated border border-error px-5"
+              >
+                {({ pressed }) => (
+                  <View
+                    className="flex-row items-center gap-2"
+                    style={{ opacity: pressed || deleteRecipe.isPending ? 0.7 : 1 }}
+                  >
+                    <Trash2 size={18} color={COLORS.error} strokeWidth={1.5} />
+                    <Text className="text-error font-semibold text-base">
+                      {t('common.delete')}
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
             </View>
           )}
 

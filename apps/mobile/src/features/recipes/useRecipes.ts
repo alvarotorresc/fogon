@@ -54,3 +54,27 @@ export function useAddRecipeToShopping() {
     },
   });
 }
+
+export function useDeleteRecipe() {
+  const qc = useQueryClient();
+  const { household } = useHouseholdStore();
+
+  return useMutation({
+    mutationFn: async (recipeId: string) => {
+      await api.delete(`/households/${household!.id}/recipes/${recipeId}`);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['recipes'] }),
+  });
+}
+
+export function useUpdateRecipe() {
+  const qc = useQueryClient();
+  const { household } = useHouseholdStore();
+
+  return useMutation({
+    mutationFn: async ({ id, ...input }: CreateRecipeInput & { id: string }) => {
+      await api.put(`/households/${household!.id}/recipes/${id}`, input);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['recipes'] }),
+  });
+}

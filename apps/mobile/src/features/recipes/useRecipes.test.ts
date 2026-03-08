@@ -1,14 +1,18 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement, type ReactNode } from 'react';
-import { useCreateRecipe, useAddRecipeToShopping } from './useRecipes';
+import { useCreateRecipe, useAddRecipeToShopping, useDeleteRecipe, useUpdateRecipe } from './useRecipes';
 
 const mockPost = jest.fn().mockResolvedValue({ data: { data: { id: 'recipe-1' } } });
+const mockDelete = jest.fn().mockResolvedValue({ data: { data: null } });
+const mockPut = jest.fn().mockResolvedValue({ data: { data: { id: 'recipe-1' } } });
 
 jest.mock('@/lib/api', () => ({
   api: {
     get: jest.fn().mockResolvedValue({ data: { data: [] } }),
     post: (...args: unknown[]) => mockPost(...args),
+    delete: (...args: unknown[]) => mockDelete(...args),
+    put: (...args: unknown[]) => mockPut(...args),
   },
 }));
 
@@ -136,6 +140,82 @@ describe('useAddRecipeToShopping', () => {
 
     await act(async () => {
       result.current.mutate('recipe-1');
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.message).toBe('Server error');
+  });
+});
+
+describe('useDeleteRecipe', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('should call DELETE with recipe ID', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useDeleteRecipe(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate('recipe-42');
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(mockDelete).toHaveBeenCalledWith('/households/hh-123/recipes/recipe-42');
+  });
+
+  it('should handle delete error', async () => {
+    mockDelete.mockRejectedValueOnce(new Error('Not found'));
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useDeleteRecipe(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate('bad-id');
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.message).toBe('Not found');
+  });
+});
+
+describe('useUpdateRecipe', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('should call PUT with recipe data', async () => {
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useUpdateRecipe(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate({
+        id: 'recipe-1',
+        title: 'Updated Pasta',
+        description: 'Better',
+        ingredients: [{ name: 'Flour' }],
+        steps: [{ description: 'Mix' }],
+      });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(mockPut).toHaveBeenCalledWith('/households/hh-123/recipes/recipe-1', {
+      title: 'Updated Pasta',
+      description: 'Better',
+      ingredients: [{ name: 'Flour' }],
+      steps: [{ description: 'Mix' }],
+    });
+  });
+
+  it('should handle update error', async () => {
+    mockPut.mockRejectedValueOnce(new Error('Server error'));
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useUpdateRecipe(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate({
+        id: 'recipe-1',
+        title: 'Bad',
+        ingredients: [],
+        steps: [],
+      });
     });
 
     await waitFor(() => expect(result.current.isError).toBe(true));

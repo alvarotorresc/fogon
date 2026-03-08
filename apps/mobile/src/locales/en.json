@@ -81,7 +81,9 @@
     "add_to_shopping": "Add to shopping list",
     "added_to_shopping": "{{count}} ingredient added to list",
     "added_to_shopping_plural": "{{count}} ingredients added to list",
-    "already_in_list": "All ingredients are already in the list"
+    "already_in_list": "All ingredients are already in the list",
+    "edit_title": "Edit recipe",
+    "delete_confirm": "Are you sure you want to delete this recipe? This action cannot be undone."
   },
   "menu": {
     "title": "Weekly menu",
