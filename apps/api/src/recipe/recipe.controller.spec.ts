@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RecipeController } from './recipe.controller';
 import { RecipeService } from './recipe.service';
-import { NotFoundException } from '@nestjs/common';
+import { RecipeImageService } from './recipe-image.service';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { HouseholdMemberGuard } from '../common/guards/household-member.guard';
 
 const mockRecipeService = {
@@ -11,6 +12,10 @@ const mockRecipeService = {
   addIngredientsToShopping: jest.fn(),
   remove: jest.fn(),
   update: jest.fn(),
+};
+
+const mockRecipeImageService = {
+  uploadImage: jest.fn(),
 };
 
 describe('RecipeController', () => {
@@ -23,6 +28,7 @@ describe('RecipeController', () => {
       controllers: [RecipeController],
       providers: [
         { provide: RecipeService, useValue: mockRecipeService },
+        { provide: RecipeImageService, useValue: mockRecipeImageService },
       ],
     })
       .overrideGuard(HouseholdMemberGuard)
@@ -153,6 +159,42 @@ describe('RecipeController', () => {
       await expect(
         controller.update('h-1', 'bad-id', { title: 'X', ingredients: [], steps: [] }),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('uploadImage', () => {
+    it('should upload image and return { data: { imageUrl } }', async () => {
+      const imageUrl = 'https://storage.example.com/recipe-images/h-1/r-1/123.jpg';
+      mockRecipeImageService.uploadImage.mockResolvedValue({ imageUrl });
+
+      const mockReq = {
+        userId: 'user-1',
+        file: jest.fn().mockResolvedValue({
+          mimetype: 'image/jpeg',
+          toBuffer: jest.fn().mockResolvedValue(Buffer.from('fake-image')),
+        }),
+      };
+
+      const result = await controller.uploadImage('h-1', 'r-1', mockReq as never);
+
+      expect(result).toEqual({ data: { imageUrl } });
+      expect(mockRecipeImageService.uploadImage).toHaveBeenCalledWith(
+        'h-1',
+        'r-1',
+        expect.any(Buffer),
+        'image/jpeg',
+      );
+    });
+
+    it('should throw BadRequestException when no file is provided', async () => {
+      const mockReq = {
+        userId: 'user-1',
+        file: jest.fn().mockResolvedValue(undefined),
+      };
+
+      await expect(
+        controller.uploadImage('h-1', 'r-1', mockReq as never),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

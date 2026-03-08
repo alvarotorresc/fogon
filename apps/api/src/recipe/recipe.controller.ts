@@ -1,5 +1,17 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Req,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
 import { RecipeService } from './recipe.service';
+import { RecipeImageService } from './recipe-image.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { HouseholdMemberGuard } from '../common/guards/household-member.guard';
@@ -8,10 +20,20 @@ interface AuthenticatedRequest {
   userId: string;
 }
 
+interface FastifyRequestWithFile extends AuthenticatedRequest {
+  file: () => Promise<{
+    mimetype: string;
+    toBuffer: () => Promise<Buffer>;
+  } | undefined>;
+}
+
 @Controller('households/:householdId/recipes')
 @UseGuards(HouseholdMemberGuard)
 export class RecipeController {
-  constructor(private readonly recipeService: RecipeService) {}
+  constructor(
+    private readonly recipeService: RecipeService,
+    private readonly recipeImageService: RecipeImageService,
+  ) {}
 
   @Get()
   async findAll(@Param('householdId') householdId: string) {
@@ -49,6 +71,28 @@ export class RecipeController {
       recipeId,
       req.userId,
     );
+    return { data: result };
+  }
+
+  @Post(':recipeId/image')
+  async uploadImage(
+    @Param('householdId') householdId: string,
+    @Param('recipeId') recipeId: string,
+    @Req() req: FastifyRequestWithFile,
+  ) {
+    const file = await req.file();
+    if (!file) {
+      throw new BadRequestException('No image file provided');
+    }
+
+    const buffer = await file.toBuffer();
+    const result = await this.recipeImageService.uploadImage(
+      householdId,
+      recipeId,
+      buffer,
+      file.mimetype,
+    );
+
     return { data: result };
   }
 
