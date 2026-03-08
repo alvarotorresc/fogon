@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Plus, Clock, ChefHat } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 import { useRecipes } from '@/features/recipes/useRecipes';
 import { useMealPlan } from '@/features/meal-plan/useMealPlan';
 import { RecipeCard } from '@/features/recipes/RecipeCard';
@@ -94,6 +94,7 @@ function FilterChips({
 
 export default function MenuScreen() {
   const { t } = useTranslation();
+  const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<FilterOption>('all');
@@ -149,7 +150,7 @@ export default function MenuScreen() {
         ListEmptyComponent={
           recipesLoading ? (
             <View className="items-center py-12">
-              <ActivityIndicator color={COLORS.terracota} />
+              <ActivityIndicator color={colors.terracota} />
             </View>
           ) : recipesError ? (
             <View className="items-center py-12 gap-3">
@@ -167,7 +168,7 @@ export default function MenuScreen() {
             </View>
           ) : (
             <View className="items-center py-12 gap-3">
-              <ChefHat size={48} color={COLORS.textTertiary} strokeWidth={1.5} />
+              <ChefHat size={48} color={colors.textTertiary} strokeWidth={1.5} />
               <Text className="text-text-tertiary text-sm">{t('recipes.empty')}</Text>
             </View>
           )

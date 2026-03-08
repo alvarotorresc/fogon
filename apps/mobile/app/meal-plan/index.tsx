@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ChevronLeft, ChevronRight, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useMealPlan, useAssignMeal, useClearMealSlot } from '@/features/meal-plan/useMealPlan';
@@ -80,6 +80,7 @@ function AssignModal({
   onAssignCustom: (text: string) => void;
 }) {
   const { t } = useTranslation();
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const [customText, setCustomText] = useState('');
 
@@ -123,7 +124,7 @@ function AssignModal({
           <Pressable onPress={onClose} accessibilityLabel={t('common.close')} accessibilityRole="button">
             {({ pressed }) => (
               <View style={{ opacity: pressed ? 0.7 : 1 }}>
-                <X size={20} color={COLORS.textPrimary} strokeWidth={1.5} />
+                <X size={20} color={colors.textPrimary} strokeWidth={1.5} />
               </View>
             )}
           </Pressable>
@@ -179,6 +180,7 @@ function AssignModal({
 
 export default function MealPlanScreen() {
   const { t } = useTranslation();
+  const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [weekOffset, setWeekOffset] = useState(0);
@@ -263,7 +265,7 @@ export default function MealPlanScreen() {
         >
           {({ pressed }) => (
             <View style={{ opacity: pressed ? 0.7 : 1 }}>
-              <ArrowLeft size={20} color={COLORS.textPrimary} strokeWidth={1.5} />
+              <ArrowLeft size={20} color={colors.textPrimary} strokeWidth={1.5} />
             </View>
           )}
         </Pressable>
@@ -281,7 +283,7 @@ export default function MealPlanScreen() {
         >
           {({ pressed }) => (
             <View style={{ opacity: pressed ? 0.7 : 1 }}>
-              <ChevronLeft size={20} color={COLORS.textPrimary} strokeWidth={1.5} />
+              <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={1.5} />
             </View>
           )}
         </Pressable>
@@ -302,7 +304,7 @@ export default function MealPlanScreen() {
         >
           {({ pressed }) => (
             <View style={{ opacity: pressed ? 0.7 : 1 }}>
-              <ChevronRight size={20} color={COLORS.textPrimary} strokeWidth={1.5} />
+              <ChevronRight size={20} color={colors.textPrimary} strokeWidth={1.5} />
             </View>
           )}
         </Pressable>
@@ -322,7 +324,7 @@ export default function MealPlanScreen() {
       {/* Week grid */}
       {isLoading ? (
         <View className="items-center py-12">
-          <ActivityIndicator color={COLORS.terracota} />
+          <ActivityIndicator color={colors.terracota} />
         </View>
       ) : error ? (
         <View className="items-center py-12 gap-3">

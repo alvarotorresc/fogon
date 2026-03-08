@@ -6,10 +6,11 @@ import { Home } from 'lucide-react-native';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useCreateHousehold } from '@/features/auth/useHousehold';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 
 export default function CreateHouseholdScreen() {
   const { t } = useTranslation();
+  const colors = useColors();
   const { createHousehold, loading, error } = useCreateHousehold();
   const [name, setName] = useState('');
 
@@ -29,7 +30,7 @@ export default function CreateHouseholdScreen() {
       >
         <View className="items-center mb-12">
           <View className="w-16 h-16 rounded-2xl bg-bg-elevated items-center justify-center">
-            <Home color={COLORS.terracota} size={32} />
+            <Home color={colors.terracota} size={32} />
           </View>
           <Text className="text-text-primary text-2xl font-bold mt-4">
             {t('household.create')}

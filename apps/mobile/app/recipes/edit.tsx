@@ -14,7 +14,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Plus, X, GripVertical } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useRecipes, useUpdateRecipe } from '@/features/recipes/useRecipes';
@@ -38,6 +38,7 @@ function generateKey(): string {
 export default function EditRecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { data: recipes, isLoading } = useRecipes();
@@ -141,7 +142,7 @@ export default function EditRecipeScreen() {
   if (isLoading || !initialized) {
     return (
       <View className="flex-1 bg-bg-primary items-center justify-center">
-        <ActivityIndicator color={COLORS.terracota} />
+        <ActivityIndicator color={colors.terracota} />
       </View>
     );
   }
@@ -180,7 +181,7 @@ export default function EditRecipeScreen() {
           <Pressable onPress={() => router.back()} className="w-10 h-10 items-center justify-center">
             {({ pressed }) => (
               <View style={{ opacity: pressed ? 0.7 : 1 }}>
-                <ArrowLeft size={20} color={COLORS.textPrimary} strokeWidth={1.5} />
+                <ArrowLeft size={20} color={colors.textPrimary} strokeWidth={1.5} />
               </View>
             )}
           </Pressable>
@@ -231,7 +232,7 @@ export default function EditRecipeScreen() {
             <Switch
               value={isPublic}
               onValueChange={setIsPublic}
-              trackColor={{ false: COLORS.bgTertiary, true: COLORS.terracota }}
+              trackColor={{ false: colors.bgTertiary, true: colors.terracota }}
               thumbColor="white"
               accessibilityLabel={t('recipes.public')}
             />
@@ -245,7 +246,7 @@ export default function EditRecipeScreen() {
             {ingredients.map((ing, index) => (
               <View key={ing.key} className="flex-row gap-2 items-start">
                 <View className="pt-3">
-                  <GripVertical size={16} color={COLORS.textTertiary} strokeWidth={1.5} />
+                  <GripVertical size={16} color={colors.textTertiary} strokeWidth={1.5} />
                 </View>
                 <View className="flex-1 gap-2">
                   <Input
@@ -282,7 +283,7 @@ export default function EditRecipeScreen() {
                   >
                     {({ pressed }) => (
                       <View style={{ opacity: pressed ? 0.7 : 1 }}>
-                        <X size={18} color={COLORS.error} strokeWidth={1.5} />
+                        <X size={18} color={colors.error} strokeWidth={1.5} />
                       </View>
                     )}
                   </Pressable>
@@ -292,7 +293,7 @@ export default function EditRecipeScreen() {
             <Pressable onPress={addIngredient} className="flex-row items-center gap-2 py-2">
               {({ pressed }) => (
                 <View className="flex-row items-center gap-2" style={{ opacity: pressed ? 0.7 : 1 }}>
-                  <Plus size={16} color={COLORS.brandBlue} strokeWidth={2} />
+                  <Plus size={16} color={colors.brandBlue} strokeWidth={2} />
                   <Text className="text-brand-blue text-sm font-medium">
                     {t('recipes.add_ingredient')}
                   </Text>
@@ -328,7 +329,7 @@ export default function EditRecipeScreen() {
                   >
                     {({ pressed }) => (
                       <View style={{ opacity: pressed ? 0.7 : 1 }}>
-                        <X size={18} color={COLORS.error} strokeWidth={1.5} />
+                        <X size={18} color={colors.error} strokeWidth={1.5} />
                       </View>
                     )}
                   </Pressable>
@@ -338,7 +339,7 @@ export default function EditRecipeScreen() {
             <Pressable onPress={addStep} className="flex-row items-center gap-2 py-2">
               {({ pressed }) => (
                 <View className="flex-row items-center gap-2" style={{ opacity: pressed ? 0.7 : 1 }}>
-                  <Plus size={16} color={COLORS.brandBlue} strokeWidth={2} />
+                  <Plus size={16} color={colors.brandBlue} strokeWidth={2} />
                   <Text className="text-brand-blue text-sm font-medium">
                     {t('recipes.add_step')}
                   </Text>

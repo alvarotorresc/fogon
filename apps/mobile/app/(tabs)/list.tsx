@@ -3,7 +3,7 @@ import { View, Text, SectionList, Pressable, ActivityIndicator } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Trash2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 import { SHOPPING_CATEGORIES } from '@/constants/categories';
 import {
   useShoppingList,
@@ -26,6 +26,7 @@ interface Section {
 
 export default function ListScreen() {
   const { t } = useTranslation();
+  const colors = useColors();
   const { data: items, isLoading, isError, refetch } = useShoppingList();
   const addItem = useAddShoppingItem();
   const toggleItem = useToggleShoppingItem();
@@ -75,7 +76,7 @@ export default function ListScreen() {
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-bg-primary items-center justify-center">
-        <ActivityIndicator color={COLORS.terracota} size="large" />
+        <ActivityIndicator color={colors.terracota} size="large" />
       </SafeAreaView>
     );
   }
@@ -108,7 +109,7 @@ export default function ListScreen() {
             <Pressable onPress={() => clearDone.mutate()} disabled={clearDone.isPending}>
               {({ pressed }) => (
                 <View className={`flex-row items-center gap-1.5 ${pressed ? 'opacity-70' : ''}`}>
-                  <Trash2 size={14} color={COLORS.textTertiary} />
+                  <Trash2 size={14} color={colors.textTertiary} />
                   <Text className="text-text-tertiary text-sm">{t('shopping.clear_done')}</Text>
                 </View>
               )}
@@ -160,7 +161,7 @@ export default function ListScreen() {
           <View
             className={`w-14 h-14 rounded-full bg-brand-terracota items-center justify-center shadow-lg ${pressed ? 'opacity-80' : ''}`}
           >
-            <Plus size={28} color={COLORS.textPrimary} strokeWidth={2.5} />
+            <Plus size={28} color={colors.textPrimary} strokeWidth={2.5} />
           </View>
         )}
       </Pressable>

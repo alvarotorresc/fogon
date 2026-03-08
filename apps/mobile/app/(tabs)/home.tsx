@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { Copy, UserPlus, LogOut, Settings } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 import { useHouseholdStore } from '@/store/householdStore';
 import { useHouseholdMembers } from '@/features/household/useHouseholdData';
 import { useLeaveHousehold } from '@/features/auth/useHousehold';
@@ -53,6 +53,7 @@ function MemberRow({ member }: { member: HouseholdMember }) {
 export default function HomeScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const colors = useColors();
   const { household } = useHouseholdStore();
   const { data: members, isLoading, error, refetch } = useHouseholdMembers();
   const { leaveHousehold } = useLeaveHousehold();
@@ -120,7 +121,7 @@ export default function HomeScreen() {
           {({ pressed }) => (
             <Settings
               size={22}
-              color={COLORS.textSecondary}
+              color={colors.textSecondary}
               strokeWidth={1.5}
               style={{ opacity: pressed ? 0.7 : 1 }}
             />
@@ -152,7 +153,7 @@ export default function HomeScreen() {
                 <Text className="text-brand-terracota font-mono text-base font-bold flex-1 tracking-widest">
                   {household.inviteCode}
                 </Text>
-                <Copy size={16} color={COLORS.textSecondary} strokeWidth={1.5} />
+                <Copy size={16} color={colors.textSecondary} strokeWidth={1.5} />
               </View>
             )}
           </Pressable>
@@ -172,7 +173,7 @@ export default function HomeScreen() {
 
         {isLoading ? (
           <View className="items-center py-12">
-            <ActivityIndicator color={COLORS.terracota} />
+            <ActivityIndicator color={colors.terracota} />
           </View>
         ) : error ? (
           <View className="items-center py-12 gap-3">
@@ -225,7 +226,7 @@ export default function HomeScreen() {
         >
           {({ pressed }) => (
             <View className="flex-row items-center gap-2" style={{ opacity: pressed ? 0.7 : 1 }}>
-              <LogOut size={18} color={COLORS.error} strokeWidth={1.5} />
+              <LogOut size={18} color={colors.error} strokeWidth={1.5} />
               <Text className="text-error font-semibold text-base">{t('hogar.leave')}</Text>
             </View>
           )}

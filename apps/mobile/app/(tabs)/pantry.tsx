@@ -3,7 +3,7 @@ import { View, Text, FlatList, Pressable, ActivityIndicator, Animated } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 import { usePantry, useAddPantryItem, useUpdateStockLevel } from '@/features/pantry/usePantry';
 import { PantryItem } from '@/features/pantry/PantryItem';
 import { AddPantryItemSheet } from '@/features/pantry/AddPantryItemSheet';
@@ -16,6 +16,7 @@ const FILTERS: FilterValue[] = ['all', 'ok', 'low', 'empty'];
 
 export default function PantryScreen() {
   const { t } = useTranslation();
+  const colors = useColors();
   const { data: items, isLoading, isError, refetch } = usePantry();
   const addItem = useAddPantryItem();
   const updateStock = useUpdateStockLevel();
@@ -82,7 +83,7 @@ export default function PantryScreen() {
   if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-bg-primary items-center justify-center">
-        <ActivityIndicator color={COLORS.terracota} size="large" />
+        <ActivityIndicator color={colors.terracota} size="large" />
       </SafeAreaView>
     );
   }
@@ -168,7 +169,7 @@ export default function PantryScreen() {
           <View
             className={`w-14 h-14 rounded-full bg-brand-terracota items-center justify-center shadow-lg ${pressed ? 'opacity-80' : ''}`}
           >
-            <Plus size={28} color={COLORS.textPrimary} strokeWidth={2.5} />
+            <Plus size={28} color={colors.textPrimary} strokeWidth={2.5} />
           </View>
         )}
       </Pressable>

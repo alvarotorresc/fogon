@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { SHOPPING_CATEGORIES } from '@/constants/categories';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 
 interface AddItemSheetProps {
   visible: boolean;
@@ -24,6 +24,7 @@ interface AddItemSheetProps {
 
 export function AddItemSheet({ visible, onClose, onAdd, loading }: AddItemSheetProps) {
   const { t } = useTranslation();
+  const colors = useColors();
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');
   const [category, setCategory] = useState<string>(SHOPPING_CATEGORIES[0].key);
@@ -58,7 +59,7 @@ export function AddItemSheet({ visible, onClose, onAdd, loading }: AddItemSheetP
             <Text className="text-text-primary text-lg font-bold">{t('shopping.add_item')}</Text>
             <Pressable onPress={handleClose} hitSlop={12}>
               {({ pressed }) => (
-                <X size={24} color={COLORS.textSecondary} opacity={pressed ? 0.5 : 1} />
+                <X size={24} color={colors.textSecondary} opacity={pressed ? 0.5 : 1} />
               )}
             </Pressable>
           </View>

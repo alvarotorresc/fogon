@@ -6,10 +6,11 @@ import { Users } from 'lucide-react-native';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useJoinHousehold } from '@/features/auth/useHousehold';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 
 export default function JoinHouseholdScreen() {
   const { t } = useTranslation();
+  const colors = useColors();
   const { joinHousehold, loading, error } = useJoinHousehold();
   const [code, setCode] = useState('');
 
@@ -29,7 +30,7 @@ export default function JoinHouseholdScreen() {
       >
         <View className="items-center mb-12">
           <View className="w-16 h-16 rounded-2xl bg-bg-elevated items-center justify-center">
-            <Users color={COLORS.terracota} size={32} />
+            <Users color={colors.terracota} size={32} />
           </View>
           <Text className="text-text-primary text-2xl font-bold mt-4">{t('household.join')}</Text>
         </View>

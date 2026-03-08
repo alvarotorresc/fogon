@@ -3,7 +3,7 @@ import { View, Text, Pressable, Animated } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Check, Trash2, Pencil } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 import type { ShoppingItem as ShoppingItemType } from '@fogon/types';
 
 interface ShoppingItemProps {
@@ -46,6 +46,7 @@ function RightActions(
 
 export function ShoppingItem({ item, onToggle, onDelete, onEdit }: ShoppingItemProps) {
   const { t } = useTranslation();
+  const colors = useColors();
   const swipeableRef = useRef<Swipeable>(null);
 
   const handleDelete = () => {
@@ -72,7 +73,7 @@ export function ShoppingItem({ item, onToggle, onDelete, onEdit }: ShoppingItemP
             <View
               className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-3 ${item.isDone ? 'bg-brand-terracota border-brand-terracota' : 'border-text-tertiary'}`}
             >
-              {item.isDone && <Check size={14} color={COLORS.textPrimary} strokeWidth={3} />}
+              {item.isDone && <Check size={14} color={colors.textPrimary} strokeWidth={3} />}
             </View>
 
             <View className="flex-1">

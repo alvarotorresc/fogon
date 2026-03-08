@@ -1,6 +1,5 @@
 import { View, Text, Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '@/constants/colors';
 import type { PantryItem as PantryItemType } from '@fogon/types';
 import type { StockLevel } from '@fogon/types';
 
@@ -9,10 +8,10 @@ interface PantryItemProps {
   onCycleStock: (id: string, nextLevel: StockLevel) => void;
 }
 
-const STOCK_CONFIG: Record<StockLevel, { color: string; bgClass: string; textClass: string }> = {
-  ok: { color: COLORS.success, bgClass: 'bg-success-bg', textClass: 'text-success' },
-  low: { color: COLORS.warning, bgClass: 'bg-warning-bg', textClass: 'text-warning' },
-  empty: { color: COLORS.error, bgClass: 'bg-bg-tertiary', textClass: 'text-error' },
+const STOCK_CONFIG: Record<StockLevel, { bgClass: string; textClass: string }> = {
+  ok: { bgClass: 'bg-success-bg', textClass: 'text-success' },
+  low: { bgClass: 'bg-warning-bg', textClass: 'text-warning' },
+  empty: { bgClass: 'bg-bg-tertiary', textClass: 'text-error' },
 };
 
 const STOCK_CYCLE: Record<StockLevel, StockLevel> = {

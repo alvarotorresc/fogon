@@ -11,7 +11,7 @@ import { X } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 import type { ShoppingItem } from '@fogon/types';
 
 interface EditItemSheetProps {
@@ -24,6 +24,7 @@ interface EditItemSheetProps {
 
 export function EditItemSheet({ visible, item, onClose, onSave, loading }: EditItemSheetProps) {
   const { t } = useTranslation();
+  const colors = useColors();
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');
 
@@ -60,7 +61,7 @@ export function EditItemSheet({ visible, item, onClose, onSave, loading }: EditI
             <Text className="text-text-primary text-lg font-bold">{t('common.edit')}</Text>
             <Pressable onPress={handleClose} hitSlop={12}>
               {({ pressed }) => (
-                <X size={24} color={COLORS.textSecondary} opacity={pressed ? 0.5 : 1} />
+                <X size={24} color={colors.textSecondary} opacity={pressed ? 0.5 : 1} />
               )}
             </Pressable>
           </View>

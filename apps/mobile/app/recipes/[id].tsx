@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Image } from 'expo-image';
 import { ArrowLeft, Clock, Share2, ShoppingCart, Pencil, Trash2 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 import { useRecipes, useAddRecipeToShopping, useDeleteRecipe } from '@/features/recipes/useRecipes';
 import { formatRecipeForSharing } from '@/features/recipes/formatRecipeForSharing';
 
@@ -20,6 +20,7 @@ function PlaceholderHero() {
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
+  const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { data: recipes, isLoading } = useRecipes();
@@ -29,7 +30,7 @@ export default function RecipeDetailScreen() {
   if (isLoading) {
     return (
       <View className="flex-1 bg-bg-primary items-center justify-center">
-        <ActivityIndicator color={COLORS.terracota} />
+        <ActivityIndicator color={colors.terracota} />
       </View>
     );
   }
@@ -131,7 +132,7 @@ export default function RecipeDetailScreen() {
         >
           {({ pressed }) => (
             <View style={{ opacity: pressed ? 0.7 : 1 }}>
-              <ArrowLeft size={20} color={COLORS.textPrimary} strokeWidth={1.5} />
+              <ArrowLeft size={20} color={colors.textPrimary} strokeWidth={1.5} />
             </View>
           )}
         </Pressable>
@@ -151,7 +152,7 @@ export default function RecipeDetailScreen() {
           <View className="flex-row items-center gap-4">
             {recipe.prepTimeMinutes !== null && (
               <View className="flex-row items-center gap-1.5">
-                <Clock size={16} color={COLORS.textSecondary} strokeWidth={1.5} />
+                <Clock size={16} color={colors.textSecondary} strokeWidth={1.5} />
                 <Text className="text-text-secondary text-sm">
                   {t('recipes.prep_time', { minutes: recipe.prepTimeMinutes })}
                 </Text>
@@ -250,7 +251,7 @@ export default function RecipeDetailScreen() {
               >
                 {({ pressed }) => (
                   <View className="flex-row items-center gap-2" style={{ opacity: pressed ? 0.7 : 1 }}>
-                    <Pencil size={18} color={COLORS.textPrimary} strokeWidth={1.5} />
+                    <Pencil size={18} color={colors.textPrimary} strokeWidth={1.5} />
                     <Text className="text-text-primary font-semibold text-base">
                       {t('common.edit')}
                     </Text>
@@ -268,7 +269,7 @@ export default function RecipeDetailScreen() {
                     className="flex-row items-center gap-2"
                     style={{ opacity: pressed || deleteRecipe.isPending ? 0.7 : 1 }}
                   >
-                    <Trash2 size={18} color={COLORS.error} strokeWidth={1.5} />
+                    <Trash2 size={18} color={colors.error} strokeWidth={1.5} />
                     <Text className="text-error font-semibold text-base">
                       {t('common.delete')}
                     </Text>
@@ -285,7 +286,7 @@ export default function RecipeDetailScreen() {
           >
             {({ pressed }) => (
               <View className="flex-row items-center gap-2" style={{ opacity: pressed ? 0.7 : 1 }}>
-                <Share2 size={18} color={COLORS.textPrimary} strokeWidth={1.5} />
+                <Share2 size={18} color={colors.textPrimary} strokeWidth={1.5} />
                 <Text className="text-text-primary font-semibold text-base">
                   {t('recipes.share')}
                 </Text>

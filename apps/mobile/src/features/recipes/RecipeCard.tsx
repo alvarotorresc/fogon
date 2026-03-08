@@ -2,7 +2,7 @@ import { View, Text, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { Clock } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 import type { Recipe } from '@fogon/types';
 
 interface RecipeCardProps {
@@ -20,6 +20,7 @@ function PlaceholderImage() {
 
 export function RecipeCard({ recipe, onPress }: RecipeCardProps) {
   const { t } = useTranslation();
+  const colors = useColors();
 
   return (
     <Pressable onPress={onPress} className="bg-bg-elevated rounded-xl border border-border mb-3">
@@ -51,7 +52,7 @@ export function RecipeCard({ recipe, onPress }: RecipeCardProps) {
 
             {recipe.prepTimeMinutes !== null && (
               <View className="flex-row items-center gap-1">
-                <Clock size={14} color={COLORS.textSecondary} strokeWidth={1.5} />
+                <Clock size={14} color={colors.textSecondary} strokeWidth={1.5} />
                 <Text className="text-text-secondary text-xs">
                   {t('recipes.prep_time', { minutes: recipe.prepTimeMinutes })}
                 </Text>

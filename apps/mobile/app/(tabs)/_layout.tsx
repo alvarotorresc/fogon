@@ -1,23 +1,24 @@
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ShoppingCart, CalendarDays, Package, Home } from 'lucide-react-native';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 
 export default function TabLayout() {
   const { t } = useTranslation();
+  const colors = useColors();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: COLORS.bgSecondary,
-          borderTopColor: COLORS.border,
+          backgroundColor: colors.bgSecondary,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
           height: 83,
         },
-        tabBarActiveTintColor: COLORS.terracota,
-        tabBarInactiveTintColor: COLORS.textTertiary,
+        tabBarActiveTintColor: colors.terracota,
+        tabBarInactiveTintColor: colors.textTertiary,
         tabBarLabelStyle: {
           fontSize: 11,
           marginBottom: 6,
