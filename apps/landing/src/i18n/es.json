@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "title": "Fogon — Tu cocina, organizada",
+    "description": "Organiza la cocina con tu pareja. Lista de la compra en tiempo real, despensa, recetario y planificador semanal."
+  },
+  "nav": {
+    "features": "Funciones",
+    "howItWorks": "Como funciona",
+    "download": "Descargar"
+  },
+  "hero": {
+    "tagline": "Cocina junta, come junta",
+    "description": "La app de cocina colaborativa para parejas y familias. Lista de la compra, despensa, recetas — todo sincronizado en tiempo real.",
+    "cta": "Descargar en Google Play"
+  },
+  "features": {
+    "title": "Todo lo que tu cocina necesita",
+    "shoppingList": {
+      "title": "Lista de la compra colaborativa",
+      "description": "Anade items, tachalos en la tienda. Los cambios se sincronizan al instante con tu pareja."
+    },
+    "mealPlanning": {
+      "title": "Planificador de comidas",
+      "description": "Planifica tus comidas de la semana con un calendario simple. Sabe que cocinar cada dia."
+    },
+    "pantry": {
+      "title": "Despensa compartida",
+      "description": "Controla lo que tienes en casa. Cuando algo se acaba, pasa a la lista de la compra automaticamente."
+    },
+    "recipes": {
+      "title": "Recetario",
+      "description": "Guarda tus recetas, explora las curadas por Fogon, y anade ingredientes a tu lista con un toque."
+    },
+    "smartAdd": {
+      "title": "Auto-anadir inteligente",
+      "description": "Marca un item como agotado en la despensa y aparece en la lista de la compra. Sin olvidar nada."
+    }
+  },
+  "howItWorks": {
+    "title": "Empieza en 3 pasos",
+    "step1": {
+      "title": "Crea tu hogar",
+      "description": "Registrate y configura tu espacio de cocina compartido."
+    },
+    "step2": {
+      "title": "Invita a tu pareja",
+      "description": "Comparte un codigo y empezad a colaborar al instante."
+    },
+    "step3": {
+      "title": "Empezad a cocinar juntos",
+      "description": "Anade items, planifica comidas, y no vuelvas a preguntarte que hay en la nevera."
+    }
+  },
+  "footer": {
+    "madeWith": "Made with 🔥 by",
+    "author": "Alvaro Torres",
+    "privacy": "Politica de privacidad",
+    "source": "Codigo fuente"
+  },
+  "theme": {
+    "light": "Cambiar a modo claro",
+    "dark": "Cambiar a modo oscuro"
+  },
+  "lang": {
+    "switch": "EN",
+    "label": "Cambiar a ingles"
+  }
+}

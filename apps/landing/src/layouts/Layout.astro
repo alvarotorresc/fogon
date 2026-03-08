@@ -1,0 +1,116 @@
+---
+import '../styles/global.css';
+import type { Locale } from '../i18n';
+import { getTranslations } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = getTranslations(locale);
+---
+
+<!doctype html>
+<html lang={locale} data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{t.meta.title}</title>
+    <meta name="description" content={t.meta.description} />
+    <meta name="author" content="Alvaro Torres" />
+
+    <link rel="canonical" href={`https://fogon.app${locale === 'es' ? '/es/' : '/'}`} />
+    <link rel="alternate" hreflang="en" href="https://fogon.app/" />
+    <link rel="alternate" hreflang="es" href="https://fogon.app/es/" />
+    <link rel="alternate" hreflang="x-default" href="https://fogon.app/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={t.meta.title} />
+    <meta property="og:description" content={t.meta.description} />
+    <meta property="og:url" content={`https://fogon.app${locale === 'es' ? '/es/' : '/'}`} />
+    <meta property="og:site_name" content="Fogon" />
+    <meta property="og:locale" content={locale === 'en' ? 'en_US' : 'es_ES'} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={t.meta.title} />
+    <meta name="twitter:description" content={t.meta.description} />
+
+    <meta name="theme-color" content="#0A0A0A" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <script is:inline>
+      // Theme: restore from localStorage before paint to avoid flash
+      (function () {
+        var stored = localStorage.getItem('fogon-theme');
+        if (stored === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <slot />
+
+    <script is:inline>
+      // Fade-in on scroll with IntersectionObserver
+      (function () {
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+        );
+
+        document.querySelectorAll('.fade-in').forEach(function (el) {
+          observer.observe(el);
+        });
+      })();
+    </script>
+
+    <script is:inline>
+      // Theme toggle
+      (function () {
+        var btn = document.getElementById('theme-toggle');
+        if (!btn) return;
+
+        // Sync icon state on load
+        var currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        var sunInit = btn.querySelector('.icon-sun');
+        var moonInit = btn.querySelector('.icon-moon');
+        if (sunInit && moonInit) {
+          sunInit.style.display = currentTheme === 'light' ? 'block' : 'none';
+          moonInit.style.display = currentTheme === 'dark' ? 'block' : 'none';
+        }
+
+        btn.addEventListener('click', function () {
+          var html = document.documentElement;
+          var current = html.getAttribute('data-theme');
+          var next = current === 'dark' ? 'light' : 'dark';
+          html.setAttribute('data-theme', next);
+          localStorage.setItem('fogon-theme', next);
+
+          var sunIcon = btn.querySelector('.icon-sun');
+          var moonIcon = btn.querySelector('.icon-moon');
+          if (sunIcon && moonIcon) {
+            sunIcon.style.display = next === 'dark' ? 'none' : 'block';
+            moonIcon.style.display = next === 'dark' ? 'block' : 'none';
+          }
+
+          btn.setAttribute(
+            'aria-label',
+            next === 'dark'
+              ? btn.dataset.labelLight || 'Switch to light mode'
+              : btn.dataset.labelDark || 'Switch to dark mode'
+          );
+        });
+      })();
+    </script>
+  </body>
+</html>

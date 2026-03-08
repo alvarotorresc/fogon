@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "title": "Fogon — Your kitchen, organized",
+    "description": "Organize your kitchen as a couple. Real-time shopping list, pantry tracking, recipe collection, and weekly meal planning."
+  },
+  "nav": {
+    "features": "Features",
+    "howItWorks": "How it works",
+    "download": "Download"
+  },
+  "hero": {
+    "tagline": "Cook together, eat together",
+    "description": "The collaborative kitchen app for couples and families. Shopping list, pantry, recipes — all synced in real time.",
+    "cta": "Download on Google Play"
+  },
+  "features": {
+    "title": "Everything your kitchen needs",
+    "shoppingList": {
+      "title": "Collaborative shopping list",
+      "description": "Add items, check them off at the store. Changes sync instantly between you and your partner."
+    },
+    "mealPlanning": {
+      "title": "Meal planning",
+      "description": "Plan your weekly meals with a simple calendar. Know what to cook every day."
+    },
+    "pantry": {
+      "title": "Shared pantry",
+      "description": "Track what you have at home. When something runs out, it moves to the shopping list automatically."
+    },
+    "recipes": {
+      "title": "Recipe collection",
+      "description": "Save your recipes, browse curated ones, and add ingredients to your list with one tap."
+    },
+    "smartAdd": {
+      "title": "Smart auto-add",
+      "description": "Mark an item as empty in your pantry and it appears in the shopping list. No more forgetting."
+    }
+  },
+  "howItWorks": {
+    "title": "Get started in 3 steps",
+    "step1": {
+      "title": "Create your household",
+      "description": "Sign up and set up your shared kitchen space."
+    },
+    "step2": {
+      "title": "Invite your partner",
+      "description": "Share a code and start collaborating instantly."
+    },
+    "step3": {
+      "title": "Start cooking together",
+      "description": "Add items, plan meals, and never wonder what's in the fridge again."
+    }
+  },
+  "footer": {
+    "madeWith": "Made with 🔥 by",
+    "author": "Alvaro Torres",
+    "privacy": "Privacy Policy",
+    "source": "Source"
+  },
+  "theme": {
+    "light": "Switch to light mode",
+    "dark": "Switch to dark mode"
+  },
+  "lang": {
+    "switch": "ES",
+    "label": "Switch to Spanish"
+  }
+}

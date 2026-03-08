@@ -1,0 +1,137 @@
+---
+import type { Translations } from '../i18n';
+
+interface Props {
+  t: Translations;
+}
+
+const { t } = Astro.props;
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero-inner">
+    <div class="hero-glow" aria-hidden="true"></div>
+
+    <svg class="hero-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M16 29C11 29 6 24 7 17C8 10 12 4 16 3C20 4 24 10 25 17C26 24 21 29 16 29Z" fill="var(--terracota)" />
+      <path d="M16 24C13.5 24 12 21.5 12.5 18.5C13 15.5 14.5 13 16 13C17.5 13 19 15.5 19.5 18.5C20 21.5 18.5 24 16 24Z" fill="white" fill-opacity="0.22" />
+    </svg>
+
+    <h1 id="hero-title" class="hero-title">Fogon</h1>
+    <p class="hero-tagline">{t.hero.tagline}</p>
+    <p class="hero-description">{t.hero.description}</p>
+
+    <a href="#" class="hero-cta" role="button">
+      <!-- Lucide Download icon -->
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      {t.hero.cta}
+    </a>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-24) var(--content-padding) var(--space-16);
+    overflow: hidden;
+  }
+
+  .hero-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 640px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-glow {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, var(--terracota-faint) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .hero-logo {
+    width: 80px;
+    height: 80px;
+    margin-bottom: var(--space-6);
+    filter: drop-shadow(0 0 30px rgba(234, 88, 12, 0.25));
+  }
+
+  .hero-title {
+    font-size: var(--text-5xl);
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: var(--space-4);
+    color: var(--text-primary);
+  }
+
+  .hero-tagline {
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    color: var(--terracota);
+    margin-bottom: var(--space-4);
+  }
+
+  .hero-description {
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--space-8);
+    max-width: 480px;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background-color: var(--brand-blue);
+    color: #FFFFFF;
+    font-size: var(--text-base);
+    font-weight: 600;
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+  }
+
+  .hero-cta:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .hero-cta:active {
+    transform: translateY(0);
+  }
+
+  @media (min-width: 768px) {
+    .hero-title {
+      font-size: 4rem;
+    }
+
+    .hero-tagline {
+      font-size: var(--text-3xl);
+    }
+
+    .hero-glow {
+      width: 600px;
+      height: 600px;
+    }
+  }
+</style>

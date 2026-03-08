@@ -1,0 +1,157 @@
+---
+import type { Translations } from '../i18n';
+import type { Locale } from '../i18n';
+import { getAlternatePath } from '../i18n';
+
+interface Props {
+  t: Translations;
+  locale: Locale;
+}
+
+const { t, locale } = Astro.props;
+const alternatePath = getAlternatePath(locale);
+---
+
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <div class="navbar-inner">
+    <a href={locale === 'en' ? '/' : '/es/'} class="navbar-brand" aria-label="Fogon home">
+      <svg class="navbar-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M16 29C11 29 6 24 7 17C8 10 12 4 16 3C20 4 24 10 25 17C26 24 21 29 16 29Z" fill="var(--terracota)" />
+        <path d="M16 24C13.5 24 12 21.5 12.5 18.5C13 15.5 14.5 13 16 13C17.5 13 19 15.5 19.5 18.5C20 21.5 18.5 24 16 24Z" fill="white" fill-opacity="0.22" />
+      </svg>
+      <span class="navbar-title">Fogon</span>
+    </a>
+
+    <div class="navbar-links">
+      <a href="#features" class="navbar-link">{t.nav.features}</a>
+      <a href="#how-it-works" class="navbar-link">{t.nav.howItWorks}</a>
+    </div>
+
+    <div class="navbar-actions">
+      <a href={alternatePath} class="lang-toggle" aria-label={t.lang.label}>
+        {t.lang.switch}
+      </a>
+
+      <button
+        id="theme-toggle"
+        class="theme-toggle"
+        type="button"
+        aria-label={t.theme.light}
+        data-label-light={t.theme.light}
+        data-label-dark={t.theme.dark}
+      >
+        <svg class="icon-sun" style="display: none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+        </svg>
+        <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<style>
+  .navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background-color: color-mix(in srgb, var(--bg-primary) 85%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .navbar-inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--space-3) var(--content-padding);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  .navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .navbar-logo {
+    width: 28px;
+    height: 28px;
+  }
+
+  .navbar-title {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .navbar-links {
+    display: none;
+    gap: var(--space-8);
+  }
+
+  .navbar-link {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.15s ease-out;
+  }
+
+  .navbar-link:hover {
+    color: var(--text-primary);
+  }
+
+  .navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .lang-toggle {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: color 0.15s ease-out, border-color 0.15s ease-out;
+  }
+
+  .lang-toggle:hover {
+    color: var(--text-primary);
+    border-color: var(--text-tertiary);
+  }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    transition: color 0.15s ease-out, background-color 0.15s ease-out;
+  }
+
+  .theme-toggle:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-tertiary);
+  }
+
+  @media (min-width: 768px) {
+    .navbar-links {
+      display: flex;
+    }
+  }
+</style>
