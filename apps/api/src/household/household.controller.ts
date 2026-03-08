@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Req, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Post, Body, Param, Req, UseGuards } from '@nestjs/common';
 import { HouseholdService } from './household.service';
 import { JoinHouseholdDto } from './dto/join-household.dto';
 import { CreateHouseholdDto } from './dto/create-household.dto';
@@ -27,6 +27,23 @@ export class HouseholdController {
   async getMembers(@Param('householdId') householdId: string) {
     const members = await this.householdService.findMembers(householdId);
     return { data: members };
+  }
+
+  @Delete(':householdId/leave')
+  @UseGuards(HouseholdMemberGuard)
+  async leave(
+    @Param('householdId') householdId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const result = await this.householdService.leave(req.userId, householdId);
+    return {
+      data: {
+        householdDeleted: result.deleted,
+        message: result.deleted
+          ? 'Household deleted (last member)'
+          : 'Successfully left household',
+      },
+    };
   }
 
   @Throttle({ default: { limit: 5, ttl: 60000 } })

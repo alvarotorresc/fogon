@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, ConflictException } from '@nestjs/common';
+import { NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { HouseholdService } from './household.service';
 import { SupabaseService } from '../supabase/supabase.service';
 
@@ -234,6 +234,193 @@ describe('HouseholdService', () => {
         inviteCode: 'ABCD1234',
         createdAt: '2026-01-01',
       });
+    });
+  });
+
+  describe('leave', () => {
+    it('should delete household when last member leaves', async () => {
+      let householdDeleteCalled = false;
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'household_members') {
+          return {
+            select: () => ({
+              eq: () => ({ count: 1, error: null }),
+            }),
+          };
+        }
+        if (table === 'households') {
+          return {
+            delete: () => ({
+              eq: () => {
+                householdDeleteCalled = true;
+                return { error: null };
+              },
+            }),
+          };
+        }
+        return {};
+      });
+
+      const result = await service.leave('user-1', 'h-1');
+
+      expect(result).toEqual({ deleted: true });
+      expect(householdDeleteCalled).toBe(true);
+    });
+
+    it('should remove member when not the last one and not owner', async () => {
+      let memberDeleteCalled = false;
+      let memberCallCount = 0;
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'household_members') {
+          memberCallCount++;
+          if (memberCallCount === 1) {
+            return {
+              select: () => ({
+                eq: () => ({ count: 2, error: null }),
+              }),
+            };
+          }
+          if (memberCallCount === 2) {
+            return {
+              select: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    single: () => ({ data: { role: 'member' }, error: null }),
+                  }),
+                }),
+              }),
+            };
+          }
+          if (memberCallCount === 3) {
+            return {
+              delete: () => ({
+                eq: () => ({
+                  eq: () => {
+                    memberDeleteCalled = true;
+                    return { error: null };
+                  },
+                }),
+              }),
+            };
+          }
+        }
+        return {};
+      });
+
+      const result = await service.leave('user-2', 'h-1');
+
+      expect(result).toEqual({ deleted: false });
+      expect(memberDeleteCalled).toBe(true);
+    });
+
+    it('should throw ForbiddenException when owner tries to leave with other members', async () => {
+      let memberCallCount = 0;
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'household_members') {
+          memberCallCount++;
+          if (memberCallCount === 1) {
+            return {
+              select: () => ({
+                eq: () => ({ count: 2, error: null }),
+              }),
+            };
+          }
+          if (memberCallCount === 2) {
+            return {
+              select: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    single: () => ({ data: { role: 'owner' }, error: null }),
+                  }),
+                }),
+              }),
+            };
+          }
+        }
+        return {};
+      });
+
+      await expect(service.leave('user-1', 'h-1')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw error when count query fails', async () => {
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'household_members') {
+          return {
+            select: () => ({
+              eq: () => ({ count: null, error: { message: 'Count failed' } }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      await expect(service.leave('user-1', 'h-1')).rejects.toThrow('Count failed');
+    });
+
+    it('should throw error when household delete fails', async () => {
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'household_members') {
+          return {
+            select: () => ({
+              eq: () => ({ count: 1, error: null }),
+            }),
+          };
+        }
+        if (table === 'households') {
+          return {
+            delete: () => ({
+              eq: () => ({ error: { message: 'Delete failed' } }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      await expect(service.leave('user-1', 'h-1')).rejects.toThrow('Delete failed');
+    });
+
+    it('should throw error when member remove fails', async () => {
+      let memberCallCount = 0;
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'household_members') {
+          memberCallCount++;
+          if (memberCallCount === 1) {
+            return {
+              select: () => ({
+                eq: () => ({ count: 2, error: null }),
+              }),
+            };
+          }
+          if (memberCallCount === 2) {
+            return {
+              select: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    single: () => ({ data: { role: 'member' }, error: null }),
+                  }),
+                }),
+              }),
+            };
+          }
+          if (memberCallCount === 3) {
+            return {
+              delete: () => ({
+                eq: () => ({
+                  eq: () => ({ error: { message: 'Remove failed' } }),
+                }),
+              }),
+            };
+          }
+        }
+        return {};
+      });
+
+      await expect(service.leave('user-2', 'h-1')).rejects.toThrow('Remove failed');
     });
   });
 

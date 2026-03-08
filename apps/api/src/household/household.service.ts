@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { SupabaseService } from '../supabase/supabase.service';
 import { AVATAR_COLORS } from './constants';
@@ -83,6 +88,49 @@ export class HouseholdService {
       inviteCode: household.invite_code,
       createdAt: household.created_at,
     };
+  }
+
+  async leave(userId: string, householdId: string) {
+    const { count, error: countError } = await this.supabase
+      .from('household_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('household_id', householdId);
+
+    if (countError) throw new Error(countError.message);
+
+    if (count === 1) {
+      const { error: deleteError } = await this.supabase
+        .from('households')
+        .delete()
+        .eq('id', householdId);
+
+      if (deleteError) throw new Error(deleteError.message);
+
+      return { deleted: true as const };
+    }
+
+    const { data: member } = await this.supabase
+      .from('household_members')
+      .select('role')
+      .eq('household_id', householdId)
+      .eq('user_id', userId)
+      .single();
+
+    if (member?.role === 'owner') {
+      throw new ForbiddenException(
+        'Owner cannot leave while other members exist. Transfer ownership first.',
+      );
+    }
+
+    const { error: removeError } = await this.supabase
+      .from('household_members')
+      .delete()
+      .eq('household_id', householdId)
+      .eq('user_id', userId);
+
+    if (removeError) throw new Error(removeError.message);
+
+    return { deleted: false as const };
   }
 
   async findMembers(householdId: string) {
