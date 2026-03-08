@@ -10,9 +10,12 @@ import {
   useAddShoppingItem,
   useToggleShoppingItem,
   useClearDoneItems,
+  useDeleteShoppingItem,
+  useUpdateShoppingItem,
 } from '@/features/shopping/useShoppingList';
 import { ShoppingItem } from '@/features/shopping/ShoppingItem';
 import { AddItemSheet } from '@/features/shopping/AddItemSheet';
+import { EditItemSheet } from '@/features/shopping/EditItemSheet';
 import type { ShoppingItem as ShoppingItemType } from '@fogon/types';
 
 interface Section {
@@ -27,7 +30,10 @@ export default function ListScreen() {
   const addItem = useAddShoppingItem();
   const toggleItem = useToggleShoppingItem();
   const clearDone = useClearDoneItems();
+  const deleteItem = useDeleteShoppingItem();
+  const updateItem = useUpdateShoppingItem();
   const [sheetVisible, setSheetVisible] = useState(false);
+  const [editingItem, setEditingItem] = useState<ShoppingItemType | null>(null);
 
   const sections = useMemo<Section[]>(() => {
     if (!items?.length) return [];
@@ -49,6 +55,20 @@ export default function ListScreen() {
   const handleAdd = (data: { name: string; quantity?: string; category: string }) => {
     addItem.mutate(data, {
       onSuccess: () => setSheetVisible(false),
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    deleteItem.mutate(id);
+  };
+
+  const handleEdit = (item: ShoppingItemType) => {
+    setEditingItem(item);
+  };
+
+  const handleSaveEdit = (data: { id: string; name: string; quantity?: string }) => {
+    updateItem.mutate(data, {
+      onSuccess: () => setEditingItem(null),
     });
   };
 
@@ -124,7 +144,9 @@ export default function ListScreen() {
               <Text className="text-text-tertiary text-xs">({section.data.length})</Text>
             </View>
           )}
-          renderItem={({ item }) => <ShoppingItem item={item} onToggle={handleToggle} />}
+          renderItem={({ item }) => (
+            <ShoppingItem item={item} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} />
+          )}
           stickySectionHeadersEnabled
           contentContainerClassName="pb-24"
         />
@@ -148,6 +170,14 @@ export default function ListScreen() {
         onClose={() => setSheetVisible(false)}
         onAdd={handleAdd}
         loading={addItem.isPending}
+      />
+
+      <EditItemSheet
+        visible={!!editingItem}
+        item={editingItem}
+        onClose={() => setEditingItem(null)}
+        onSave={handleSaveEdit}
+        loading={updateItem.isPending}
       />
     </SafeAreaView>
   );

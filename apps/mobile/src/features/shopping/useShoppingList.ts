@@ -67,3 +67,30 @@ export function useClearDoneItems() {
     onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY] }),
   });
 }
+
+export function useDeleteShoppingItem() {
+  const qc = useQueryClient();
+  const { household } = useHouseholdStore();
+
+  return useMutation({
+    mutationFn: async (itemId: string) => {
+      await api.delete(`/households/${household!.id}/shopping/${itemId}`);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY] }),
+  });
+}
+
+export function useUpdateShoppingItem() {
+  const qc = useQueryClient();
+  const { household } = useHouseholdStore();
+
+  return useMutation({
+    mutationFn: async ({ id, name, quantity }: { id: string; name: string; quantity?: string }) => {
+      await api.patch(`/households/${household!.id}/shopping/${id}`, {
+        name,
+        quantity: quantity || undefined,
+      });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY] }),
+  });
+}
