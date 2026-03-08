@@ -17,3 +17,10 @@ api.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(undefined, async (error) => {
+  if (axios.isAxiosError(error) && error.response?.status === 401) {
+    await supabase.auth.signOut();
+  }
+  return Promise.reject(error);
+});

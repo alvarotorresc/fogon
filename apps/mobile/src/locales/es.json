@@ -151,6 +151,17 @@
     "made_with": "Hecho con 🔥 por Alvaro Torres",
     "license": "Licencia MIT"
   },
+  "errors": {
+    "generic": "Algo salió mal",
+    "network": "Sin conexión a internet",
+    "http_401": "Sesión expirada, inicia sesión de nuevo",
+    "http_403": "No tienes permiso para esta acción",
+    "http_404": "No se encontró el recurso solicitado",
+    "http_409": "Esta acción entra en conflicto con datos existentes",
+    "http_422": "Los datos proporcionados no son válidos",
+    "http_429": "Demasiadas solicitudes, espera un momento",
+    "http_500": "Algo salió mal, inténtalo de nuevo"
+  },
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",

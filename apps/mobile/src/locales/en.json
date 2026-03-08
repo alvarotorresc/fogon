@@ -151,6 +151,17 @@
     "made_with": "Made with 🔥 by Alvaro Torres",
     "license": "MIT License"
   },
+  "errors": {
+    "generic": "Something went wrong",
+    "network": "No internet connection",
+    "http_401": "Session expired, please log in again",
+    "http_403": "You don't have permission for this action",
+    "http_404": "The requested resource was not found",
+    "http_409": "This action conflicts with existing data",
+    "http_422": "The data provided is not valid",
+    "http_429": "Too many requests, please wait a moment",
+    "http_500": "Something went wrong, please try again"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",

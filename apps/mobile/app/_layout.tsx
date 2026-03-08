@@ -1,6 +1,7 @@
 import '../global.css';
 import '../src/lib/i18n';
 import { useEffect } from 'react';
+import { View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
@@ -9,6 +10,7 @@ import { queryClient } from '@/lib/queryClient';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeSync } from '@/store/useThemeSync';
+import { ErrorToast } from '@/components/ui/ErrorToast';
 
 export default function RootLayout() {
   const { setSession, setLoading } = useAuthStore();
@@ -36,8 +38,11 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false }} />
+      <View className="flex-1">
+        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        <Stack screenOptions={{ headerShown: false }} />
+        <ErrorToast />
+      </View>
     </QueryClientProvider>
   );
 }
