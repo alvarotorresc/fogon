@@ -3,7 +3,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement, type ReactNode } from 'react';
 import { useUpdateStockLevel, useDeletePantryItem } from './usePantry';
 
-const mockPatch = jest.fn().mockResolvedValue({ data: { data: null } });
+const mockPatch = jest
+  .fn()
+  .mockResolvedValue({ data: { data: { addedToShoppingList: false } } });
 const mockDelete = jest.fn().mockResolvedValue({ data: { data: null } });
 
 jest.mock('@/lib/api', () => ({
@@ -79,6 +81,21 @@ describe('useUpdateStockLevel', () => {
       '/households/household-abc/pantry/pantry-3/stock',
       { stockLevel: 'ok' },
     );
+  });
+
+  it('returns addedToShoppingList from API response', async () => {
+    mockPatch.mockResolvedValueOnce({
+      data: { data: { addedToShoppingList: true } },
+    });
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useUpdateStockLevel(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate({ id: 'pantry-4', stockLevel: 'empty' });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual({ addedToShoppingList: true });
   });
 });
 

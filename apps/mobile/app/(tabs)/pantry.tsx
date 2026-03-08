@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { View, Text, FlatList, Pressable, ActivityIndicator } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, FlatList, Pressable, ActivityIndicator, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +21,28 @@ export default function PantryScreen() {
   const updateStock = useUpdateStockLevel();
   const [sheetVisible, setSheetVisible] = useState(false);
   const [filter, setFilter] = useState<FilterValue>('all');
+  const [shoppingFeedback, setShoppingFeedback] = useState(false);
+  const feedbackOpacity = useRef(new Animated.Value(0)).current;
+  const feedbackTimeout = useRef<ReturnType<typeof setTimeout>>();
+
+  const showShoppingFeedback = useCallback(() => {
+    setShoppingFeedback(true);
+    feedbackOpacity.setValue(1);
+    if (feedbackTimeout.current) clearTimeout(feedbackTimeout.current);
+    feedbackTimeout.current = setTimeout(() => {
+      Animated.timing(feedbackOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => setShoppingFeedback(false));
+    }, 2000);
+  }, [feedbackOpacity]);
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimeout.current) clearTimeout(feedbackTimeout.current);
+    };
+  }, []);
 
   const filteredItems = useMemo<PantryItemType[]>(() => {
     if (!items) return [];
@@ -29,7 +51,16 @@ export default function PantryScreen() {
   }, [items, filter]);
 
   const handleCycleStock = (id: string, nextLevel: StockLevel) => {
-    updateStock.mutate({ id, stockLevel: nextLevel });
+    updateStock.mutate(
+      { id, stockLevel: nextLevel },
+      {
+        onSuccess: (result) => {
+          if (result.addedToShoppingList) {
+            showShoppingFeedback();
+          }
+        },
+      },
+    );
   };
 
   const handleAdd = (data: {
@@ -100,6 +131,17 @@ export default function PantryScreen() {
           ))}
         </View>
       </View>
+
+      {shoppingFeedback && (
+        <Animated.View
+          style={{ opacity: feedbackOpacity }}
+          className="mx-5 mb-2 px-3 py-2 bg-success-bg rounded-lg flex-row items-center"
+        >
+          <Text className="text-success text-sm font-medium">
+            {t('pantry.added_to_shopping')}
+          </Text>
+        </Animated.View>
+      )}
 
       {filteredItems.length === 0 ? (
         <View className="flex-1 items-center justify-center">

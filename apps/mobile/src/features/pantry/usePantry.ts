@@ -46,15 +46,31 @@ export function useAddPantryItem() {
   });
 }
 
+interface UpdateStockResult {
+  addedToShoppingList: boolean;
+}
+
 export function useUpdateStockLevel() {
   const qc = useQueryClient();
   const { household } = useHouseholdStore();
 
   return useMutation({
-    mutationFn: async ({ id, stockLevel }: { id: string; stockLevel: StockLevel }) => {
-      await api.patch(`/households/${household!.id}/pantry/${id}/stock`, { stockLevel });
+    mutationFn: async ({
+      id,
+      stockLevel,
+    }: {
+      id: string;
+      stockLevel: StockLevel;
+    }): Promise<UpdateStockResult> => {
+      const { data } = await api.patch(`/households/${household!.id}/pantry/${id}/stock`, {
+        stockLevel,
+      });
+      return data.data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [QUERY_KEY] });
+      qc.invalidateQueries({ queryKey: ['shopping_items'] });
+    },
   });
 }
 
