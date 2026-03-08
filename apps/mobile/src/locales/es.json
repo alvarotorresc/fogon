@@ -84,7 +84,11 @@
     "added_to_shopping_plural": "{{count}} ingredientes añadidos a la lista",
     "already_in_list": "Todos los ingredientes ya están en la lista",
     "edit_title": "Editar receta",
-    "delete_confirm": "¿Seguro que quieres eliminar esta receta? Esta acción no se puede deshacer."
+    "delete_confirm": "¿Seguro que quieres eliminar esta receta? Esta acción no se puede deshacer.",
+    "add_photo": "Añadir foto",
+    "change_photo": "Cambiar foto",
+    "photo_uploaded": "Foto actualizada",
+    "photo_upload_error": "No se pudo subir la foto"
   },
   "menu": {
     "title": "Menú semanal",
@@ -161,6 +165,9 @@
     "http_422": "Los datos proporcionados no son válidos",
     "http_429": "Demasiadas solicitudes, espera un momento",
     "http_500": "Algo salió mal, inténtalo de nuevo"
+  },
+  "offline": {
+    "banner": "Sin conexión — mostrando datos en caché"
   },
   "common": {
     "save": "Guardar",

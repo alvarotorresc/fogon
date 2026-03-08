@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useHouseholdStore } from '@/store/householdStore';
+import { STALE_TIMES } from '@/lib/queryKeys';
 import type { Recipe } from '@fogon/types';
 
 export function useRecipes() {
@@ -14,6 +15,7 @@ export function useRecipes() {
       return data.data;
     },
     enabled: !!household,
+    staleTime: STALE_TIMES.recipes,
   });
 }
 
@@ -31,8 +33,9 @@ export function useCreateRecipe() {
   const { household } = useHouseholdStore();
 
   return useMutation({
-    mutationFn: async (input: CreateRecipeInput) => {
-      await api.post(`/households/${household!.id}/recipes`, input);
+    mutationFn: async (input: CreateRecipeInput): Promise<{ id: string }> => {
+      const { data } = await api.post(`/households/${household!.id}/recipes`, input);
+      return data.data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['recipes'] }),
   });

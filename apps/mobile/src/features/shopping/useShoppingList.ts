@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useHouseholdStore } from '@/store/householdStore';
+import { STALE_TIMES } from '@/lib/queryKeys';
 import type { ShoppingItem } from '@fogon/types';
 
 const QUERY_KEY = 'shopping_items';
@@ -16,6 +17,7 @@ export function useShoppingList() {
       return data.data;
     },
     enabled: !!household,
+    staleTime: STALE_TIMES.shopping,
     refetchInterval: 5000,
   });
 }

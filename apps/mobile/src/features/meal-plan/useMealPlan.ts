@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useHouseholdStore } from '@/store/householdStore';
+import { STALE_TIMES } from '@/lib/queryKeys';
 import type { MealPlanEntry, MealSlot } from '@fogon/types';
 
 function getWeekStart(offset = 0): string {
@@ -28,6 +29,7 @@ export function useMealPlan(weekOffset = 0) {
       return data.data;
     },
     enabled: !!household,
+    staleTime: STALE_TIMES.mealPlan,
   });
 }
 

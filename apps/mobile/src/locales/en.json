@@ -84,7 +84,11 @@
     "added_to_shopping_plural": "{{count}} ingredients added to list",
     "already_in_list": "All ingredients are already in the list",
     "edit_title": "Edit recipe",
-    "delete_confirm": "Are you sure you want to delete this recipe? This action cannot be undone."
+    "delete_confirm": "Are you sure you want to delete this recipe? This action cannot be undone.",
+    "add_photo": "Add photo",
+    "change_photo": "Change photo",
+    "photo_uploaded": "Photo updated",
+    "photo_upload_error": "Could not upload photo"
   },
   "menu": {
     "title": "Weekly menu",
@@ -161,6 +165,9 @@
     "http_422": "The data provided is not valid",
     "http_429": "Too many requests, please wait a moment",
     "http_500": "Something went wrong, please try again"
+  },
+  "offline": {
+    "banner": "Offline — showing cached data"
   },
   "common": {
     "save": "Save",

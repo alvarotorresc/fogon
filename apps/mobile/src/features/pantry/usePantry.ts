@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useHouseholdStore } from '@/store/householdStore';
+import { STALE_TIMES } from '@/lib/queryKeys';
 import type { PantryItem, StockLevel } from '@fogon/types';
 
 const QUERY_KEY = 'pantry_items';
@@ -16,6 +17,7 @@ export function usePantry() {
       return data.data;
     },
     enabled: !!household,
+    staleTime: STALE_TIMES.pantry,
   });
 }
 
