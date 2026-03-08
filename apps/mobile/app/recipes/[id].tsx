@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Pressable, Alert } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, Pressable, Alert, Share } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Image } from 'expo-image';
@@ -7,6 +7,7 @@ import { ArrowLeft, Clock, Share2, ShoppingCart, Pencil, Trash2 } from 'lucide-r
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
 import { useRecipes, useAddRecipeToShopping, useDeleteRecipe } from '@/features/recipes/useRecipes';
+import { formatRecipeForSharing } from '@/features/recipes/formatRecipeForSharing';
 
 function PlaceholderHero() {
   return (
@@ -100,8 +101,13 @@ export default function RecipeDetailScreen() {
     router.push(`/recipes/edit?id=${recipe.id}`);
   };
 
-  const handleShare = () => {
-    // Placeholder: would share recipe URL
+  const handleShare = async () => {
+    const message = formatRecipeForSharing(recipe);
+    try {
+      await Share.share({ message, title: recipe.title });
+    } catch {
+      // User cancelled or share failed — no action needed
+    }
   };
 
   return (
