@@ -2,6 +2,7 @@ const { hairlineWidth } = require('nativewind/theme');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: ['./app/**/*.{ts,tsx}', './src/**/*.{ts,tsx}'],
   presets: [require('nativewind/preset')],
   theme: {
@@ -10,27 +11,33 @@ module.exports = {
         brand: {
           terracota: '#EA580C',
           'terracota-deep': '#C2410C',
-          'terracota-faint': '#1A0C07',
+          'terracota-faint': 'var(--color-brand-terracota-faint)',
           blue: '#3291FF',
         },
         bg: {
-          primary: '#0A0A0A',
-          secondary: '#111111',
-          tertiary: '#1A1A1A',
-          elevated: '#222222',
+          primary: 'var(--color-bg-primary)',
+          secondary: 'var(--color-bg-secondary)',
+          tertiary: 'var(--color-bg-tertiary)',
+          elevated: 'var(--color-bg-elevated)',
         },
         border: {
-          DEFAULT: '#2E2E2E',
-          subtle: '#1E1E1E',
+          DEFAULT: 'var(--color-border)',
+          subtle: 'var(--color-border-subtle)',
         },
         text: {
-          primary: '#EDEDED',
-          secondary: '#A3A3A3',
-          tertiary: '#525252',
+          primary: 'var(--color-text-primary)',
+          secondary: 'var(--color-text-secondary)',
+          tertiary: 'var(--color-text-tertiary)',
         },
-        success: { DEFAULT: '#22C55E', bg: '#031a0d' },
-        warning: { DEFAULT: '#F59E0B', bg: '#1c1007' },
-        error: '#EF4444',
+        success: {
+          DEFAULT: 'var(--color-success)',
+          bg: 'var(--color-success-bg)',
+        },
+        warning: {
+          DEFAULT: 'var(--color-warning)',
+          bg: 'var(--color-warning-bg)',
+        },
+        error: 'var(--color-error)',
       },
       borderWidth: {
         hairline: hairlineWidth(),
