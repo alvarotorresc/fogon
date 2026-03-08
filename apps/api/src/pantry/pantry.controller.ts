@@ -42,8 +42,8 @@ export class PantryController {
     @Param('itemId') itemId: string,
     @Body() dto: UpdateStockLevelDto,
   ) {
-    await this.pantryService.updateStockLevel(householdId, itemId, dto.stockLevel);
-    return { data: null };
+    const result = await this.pantryService.updateStockLevel(householdId, itemId, dto.stockLevel);
+    return { data: result };
   }
 
   @Delete(':itemId')

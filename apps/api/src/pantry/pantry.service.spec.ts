@@ -100,13 +100,123 @@ describe('PantryService', () => {
       const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
       mockFrom.mockReturnValue({ update: mockUpdate });
 
-      await service.updateStockLevel('h-1', 'p-1', 'low');
+      const result = await service.updateStockLevel('h-1', 'p-1', 'low');
 
       expect(mockUpdate).toHaveBeenCalledWith(
         expect.objectContaining({ stock_level: 'low' }),
       );
       expect(mockEqId).toHaveBeenCalledWith('id', 'p-1');
       expect(mockEqHousehold).toHaveBeenCalledWith('household_id', 'h-1');
+      expect(result).toEqual({ addedToShoppingList: false });
+    });
+
+    it('auto-adds to shopping list when stock is set to empty', async () => {
+      // First call: update stock level
+      const mockEqHousehold1 = jest.fn().mockReturnValue({ error: null });
+      const mockEqId1 = jest.fn().mockReturnValue({ eq: mockEqHousehold1 });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId1 });
+
+      // Second call: fetch pantry item
+      const mockSingle = jest.fn().mockReturnValue({
+        data: { name: 'Rice', category: 'grains', added_by: 'user-1' },
+        error: null,
+      });
+      const mockEqHousehold2 = jest.fn().mockReturnValue({ single: mockSingle });
+      const mockEqId2 = jest.fn().mockReturnValue({ eq: mockEqHousehold2 });
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEqId2 });
+
+      // Third call: check existing shopping items
+      const mockLimit = jest.fn().mockReturnValue({ data: [], error: null });
+      const mockEqDone = jest.fn().mockReturnValue({ limit: mockLimit });
+      const mockIlike = jest.fn().mockReturnValue({ eq: mockEqDone });
+      const mockEqHousehold3 = jest.fn().mockReturnValue({ ilike: mockIlike });
+      const mockSelect3 = jest.fn().mockReturnValue({ eq: mockEqHousehold3 });
+
+      // Fourth call: insert shopping item
+      const mockInsert = jest.fn().mockReturnValue({ error: null });
+
+      let callCount = 0;
+      mockFrom.mockImplementation((table: string) => {
+        callCount++;
+        if (callCount === 1) return { update: mockUpdate };
+        if (callCount === 2) return { select: mockSelect };
+        if (callCount === 3) return { select: mockSelect3 };
+        return { insert: mockInsert };
+      });
+
+      const result = await service.updateStockLevel('h-1', 'p-1', 'empty');
+
+      expect(result).toEqual({ addedToShoppingList: true });
+      expect(mockInsert).toHaveBeenCalledWith({
+        household_id: 'h-1',
+        name: 'Rice',
+        category: 'grains',
+        added_by: 'user-1',
+      });
+    });
+
+    it('does not add duplicate to shopping list when item already exists', async () => {
+      // First call: update stock level
+      const mockEqHousehold1 = jest.fn().mockReturnValue({ error: null });
+      const mockEqId1 = jest.fn().mockReturnValue({ eq: mockEqHousehold1 });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId1 });
+
+      // Second call: fetch pantry item
+      const mockSingle = jest.fn().mockReturnValue({
+        data: { name: 'Rice', category: 'grains', added_by: 'user-1' },
+        error: null,
+      });
+      const mockEqHousehold2 = jest.fn().mockReturnValue({ single: mockSingle });
+      const mockEqId2 = jest.fn().mockReturnValue({ eq: mockEqHousehold2 });
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEqId2 });
+
+      // Third call: check existing — found one
+      const mockLimit = jest.fn().mockReturnValue({ data: [{ id: 'existing-1' }], error: null });
+      const mockEqDone = jest.fn().mockReturnValue({ limit: mockLimit });
+      const mockIlike = jest.fn().mockReturnValue({ eq: mockEqDone });
+      const mockEqHousehold3 = jest.fn().mockReturnValue({ ilike: mockIlike });
+      const mockSelect3 = jest.fn().mockReturnValue({ eq: mockEqHousehold3 });
+
+      let callCount = 0;
+      mockFrom.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return { update: mockUpdate };
+        if (callCount === 2) return { select: mockSelect };
+        return { select: mockSelect3 };
+      });
+
+      const result = await service.updateStockLevel('h-1', 'p-1', 'empty');
+
+      expect(result).toEqual({ addedToShoppingList: false });
+      // insert should never be called
+      expect(mockFrom).toHaveBeenCalledTimes(3);
+    });
+
+    it('returns false when pantry item fetch fails', async () => {
+      // First call: update stock level
+      const mockEqHousehold1 = jest.fn().mockReturnValue({ error: null });
+      const mockEqId1 = jest.fn().mockReturnValue({ eq: mockEqHousehold1 });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId1 });
+
+      // Second call: fetch pantry item — fails
+      const mockSingle = jest.fn().mockReturnValue({
+        data: null,
+        error: { message: 'Not found' },
+      });
+      const mockEqHousehold2 = jest.fn().mockReturnValue({ single: mockSingle });
+      const mockEqId2 = jest.fn().mockReturnValue({ eq: mockEqHousehold2 });
+      const mockSelect = jest.fn().mockReturnValue({ eq: mockEqId2 });
+
+      let callCount = 0;
+      mockFrom.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) return { update: mockUpdate };
+        return { select: mockSelect };
+      });
+
+      const result = await service.updateStockLevel('h-1', 'p-1', 'empty');
+
+      expect(result).toEqual({ addedToShoppingList: false });
     });
   });
 
