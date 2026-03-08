@@ -2,8 +2,7 @@
 create table public.households (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  -- TODO: Replace with encode(gen_random_bytes(6), 'hex') for cryptographically stronger invite codes
-  invite_code text unique not null default upper(substr(md5(random()::text), 1, 8)),
+  invite_code text unique not null default upper(encode(gen_random_bytes(6), 'hex')),
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz default now()
 );

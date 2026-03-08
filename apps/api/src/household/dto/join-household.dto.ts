@@ -3,7 +3,7 @@ import { IsNotEmpty, IsString, Length, MaxLength } from 'class-validator';
 export class JoinHouseholdDto {
   @IsString()
   @IsNotEmpty()
-  @Length(8, 8)
+  @Length(8, 12)
   inviteCode!: string;
 
   @IsString()
