@@ -1,11 +1,13 @@
 import { useCallback } from 'react';
 import { View, Text, FlatList, Pressable, ActivityIndicator, Alert, Share } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { router } from 'expo-router';
 import { Copy, UserPlus, LogOut } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
 import { useHouseholdStore } from '@/store/householdStore';
 import { useHouseholdMembers } from '@/features/household/useHouseholdData';
+import { useLeaveHousehold } from '@/features/auth/useHousehold';
 import type { HouseholdMember } from '@fogon/types';
 
 function MemberAvatar({ member }: { member: HouseholdMember }) {
@@ -53,6 +55,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { household } = useHouseholdStore();
   const { data: members, isLoading, error, refetch } = useHouseholdMembers();
+  const { leaveHousehold } = useLeaveHousehold();
 
   const handleCopyCode = useCallback(async () => {
     if (!household?.inviteCode) return;
@@ -78,12 +81,15 @@ export default function HomeScreen() {
       {
         text: t('hogar.leave'),
         style: 'destructive',
-        onPress: () => {
-          // Placeholder: would call API to leave household
+        onPress: async () => {
+          const ok = await leaveHousehold();
+          if (ok) {
+            router.replace('/(auth)/create-household');
+          }
         },
       },
     ]);
-  }, [t]);
+  }, [t, leaveHousehold]);
 
   const renderMember = useCallback(
     ({ item }: { item: HouseholdMember }) => <MemberRow member={item} />,
