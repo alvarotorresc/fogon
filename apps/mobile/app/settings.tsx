@@ -5,9 +5,10 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Globe, Bell, Info, Palette, User, ExternalLink } from 'lucide-react-native';
 import Constants from 'expo-constants';
-import { COLORS } from '@/constants/colors';
+import { useColors } from '@/constants/useColors';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useSettings, useUpdateDisplayName } from '@/features/settings/useSettings';
 
 function SectionHeader({ title }: { title: string }) {
@@ -112,6 +113,7 @@ function LanguageOption({
 
 function ProfileSection() {
   const { t } = useTranslation();
+  const colors = useColors();
   const { userEmail, userDisplayName } = useSettings();
   const { updateDisplayName, isLoading, isSuccess } = useUpdateDisplayName();
   const [name, setName] = useState(userDisplayName);
@@ -132,7 +134,7 @@ function ProfileSection() {
       <SectionHeader title={t('settings.profile')} />
       <SectionCard>
         <SectionRow
-          icon={<User size={18} color={COLORS.textSecondary} strokeWidth={1.5} />}
+          icon={<User size={18} color={colors.textSecondary} strokeWidth={1.5} />}
           label={t('settings.email')}
           value={userEmail}
           isLast={false}
@@ -162,17 +164,19 @@ function ProfileSection() {
 
 function AppearanceSection() {
   const { t } = useTranslation();
+  const colors = useColors();
 
   return (
     <>
       <SectionHeader title={t('settings.appearance')} />
       <SectionCard>
-        <SectionRow
-          icon={<Palette size={18} color={COLORS.textSecondary} strokeWidth={1.5} />}
-          label={t('settings.appearance')}
-          value={t('settings.appearance_coming_soon')}
-          isLast
-        />
+        <View className="px-4 py-3.5 gap-2">
+          <View className="flex-row items-center gap-3 mb-1">
+            <Palette size={18} color={colors.textSecondary} strokeWidth={1.5} />
+            <Text className="text-text-primary text-base">{t('settings.theme')}</Text>
+          </View>
+          <ThemeToggle />
+        </View>
       </SectionCard>
     </>
   );
@@ -204,13 +208,14 @@ function LanguageSection() {
 
 function NotificationsSection() {
   const { t } = useTranslation();
+  const colors = useColors();
 
   return (
     <>
       <SectionHeader title={t('settings.notifications')} />
       <SectionCard>
         <SectionRow
-          icon={<Bell size={18} color={COLORS.textSecondary} strokeWidth={1.5} />}
+          icon={<Bell size={18} color={colors.textSecondary} strokeWidth={1.5} />}
           label={t('settings.push_notifications')}
           value={t('settings.notifications_coming_soon')}
           isLast
@@ -222,6 +227,7 @@ function NotificationsSection() {
 
 function AboutSection() {
   const { t } = useTranslation();
+  const colors = useColors();
   const appVersion = Constants.expoConfig?.version ?? '0.0.0';
 
   const handleOpenWebsite = useCallback(() => {
@@ -233,7 +239,7 @@ function AboutSection() {
       <SectionHeader title={t('settings.about')} />
       <SectionCard>
         <SectionRow
-          icon={<Info size={18} color={COLORS.textSecondary} strokeWidth={1.5} />}
+          icon={<Info size={18} color={colors.textSecondary} strokeWidth={1.5} />}
           label={t('settings.version')}
           value={appVersion}
         />
@@ -251,12 +257,12 @@ function AboutSection() {
               <Text className="text-brand-terracota text-sm flex-1">
                 {t('settings.made_with')}
               </Text>
-              <ExternalLink size={14} color={COLORS.textTertiary} strokeWidth={1.5} />
+              <ExternalLink size={14} color={colors.textTertiary} strokeWidth={1.5} />
             </View>
           )}
         </Pressable>
         <SectionRow
-          icon={<Globe size={18} color={COLORS.textSecondary} strokeWidth={1.5} />}
+          icon={<Globe size={18} color={colors.textSecondary} strokeWidth={1.5} />}
           label={t('settings.license')}
           isLast
         />
@@ -268,6 +274,7 @@ function AboutSection() {
 export default function SettingsScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const colors = useColors();
 
   return (
     <View className="flex-1 bg-bg-primary" style={{ paddingTop: insets.top }}>
@@ -282,7 +289,7 @@ export default function SettingsScreen() {
           {({ pressed }) => (
             <ArrowLeft
               size={22}
-              color={COLORS.textPrimary}
+              color={colors.textPrimary}
               strokeWidth={1.5}
               style={{ opacity: pressed ? 0.7 : 1 }}
             />
