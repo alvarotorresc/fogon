@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { View, Text, FlatList, Pressable, ActivityIndicator, Alert, Share } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
-import { Copy, UserPlus, LogOut } from 'lucide-react-native';
+import { Copy, UserPlus, LogOut, Settings } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
 import { useHouseholdStore } from '@/store/householdStore';
@@ -109,8 +109,23 @@ export default function HomeScreen() {
   return (
     <View className="flex-1 bg-bg-primary" style={{ paddingTop: insets.top }}>
       {/* Header */}
-      <View className="px-4 pt-4 pb-2">
+      <View className="flex-row items-center justify-between px-4 pt-4 pb-2">
         <Text className="text-text-primary font-bold text-2xl">{t('hogar.title')}</Text>
+        <Pressable
+          onPress={() => router.push('/settings')}
+          accessibilityRole="button"
+          accessibilityLabel={t('settings.title')}
+          className="w-10 h-10 items-center justify-center rounded-full"
+        >
+          {({ pressed }) => (
+            <Settings
+              size={22}
+              color={COLORS.textSecondary}
+              strokeWidth={1.5}
+              style={{ opacity: pressed ? 0.7 : 1 }}
+            />
+          )}
+        </Pressable>
       </View>
 
       {/* Household info card */}

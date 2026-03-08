@@ -52,7 +52,8 @@
       "ok": "Good",
       "low": "Low",
       "empty": "Empty"
-    }
+    },
+    "added_to_shopping": "Added to shopping list"
   },
   "recipes": {
     "title": "Recipes",
@@ -125,6 +126,30 @@
     "short_4": "Fri",
     "short_5": "Sat",
     "short_6": "Sun"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "email": "Email",
+    "display_name": "Display name",
+    "display_name_placeholder": "Your name",
+    "save_name": "Save",
+    "name_saved": "Name updated",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "theme_system": "System",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "language": "Language",
+    "language_en": "English",
+    "language_es": "Español",
+    "notifications": "Notifications",
+    "push_notifications": "Push notifications",
+    "notifications_coming_soon": "Push notifications coming soon",
+    "about": "About",
+    "version": "Version",
+    "made_with": "Made with 🔥 by Alvaro Torres",
+    "license": "MIT License"
   },
   "common": {
     "save": "Save",

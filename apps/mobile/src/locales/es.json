@@ -52,7 +52,8 @@
       "ok": "Bien",
       "low": "Poco",
       "empty": "Agotado"
-    }
+    },
+    "added_to_shopping": "Añadido a la lista de la compra"
   },
   "recipes": {
     "title": "Recetas",
@@ -125,6 +126,27 @@
     "short_4": "Vie",
     "short_5": "Sáb",
     "short_6": "Dom"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "profile": "Perfil",
+    "email": "Correo electrónico",
+    "display_name": "Nombre",
+    "display_name_placeholder": "Tu nombre",
+    "save_name": "Guardar",
+    "name_saved": "Nombre actualizado",
+    "appearance": "Apariencia",
+    "appearance_coming_soon": "Opciones de tema pronto",
+    "language": "Idioma",
+    "language_en": "English",
+    "language_es": "Español",
+    "notifications": "Notificaciones",
+    "push_notifications": "Notificaciones push",
+    "notifications_coming_soon": "Notificaciones push pronto",
+    "about": "Acerca de",
+    "version": "Versión",
+    "made_with": "Hecho con 🔥 por Alvaro Torres",
+    "license": "Licencia MIT"
   },
   "common": {
     "save": "Guardar",
