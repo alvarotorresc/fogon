@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Body, Param, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Req, UseGuards } from '@nestjs/common';
 import { RecipeService } from './recipe.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
+import { UpdateRecipeDto } from './dto/update-recipe.dto';
 import { HouseholdMemberGuard } from '../common/guards/household-member.guard';
 
 interface AuthenticatedRequest {
@@ -34,6 +35,39 @@ export class RecipeController {
     @Req() req: AuthenticatedRequest,
   ) {
     const result = await this.recipeService.create(householdId, req.userId, dto);
+    return { data: result };
+  }
+
+  @Post(':recipeId/add-to-shopping')
+  async addToShopping(
+    @Param('householdId') householdId: string,
+    @Param('recipeId') recipeId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const result = await this.recipeService.addIngredientsToShopping(
+      householdId,
+      recipeId,
+      req.userId,
+    );
+    return { data: result };
+  }
+
+  @Delete(':recipeId')
+  async remove(
+    @Param('householdId') householdId: string,
+    @Param('recipeId') recipeId: string,
+  ) {
+    await this.recipeService.remove(householdId, recipeId);
+    return { data: null };
+  }
+
+  @Put(':recipeId')
+  async update(
+    @Param('householdId') householdId: string,
+    @Param('recipeId') recipeId: string,
+    @Body() dto: UpdateRecipeDto,
+  ) {
+    const result = await this.recipeService.update(householdId, recipeId, dto);
     return { data: result };
   }
 }
