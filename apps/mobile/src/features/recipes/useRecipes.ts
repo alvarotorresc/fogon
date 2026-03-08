@@ -37,3 +37,20 @@ export function useCreateRecipe() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['recipes'] }),
   });
 }
+
+export function useAddRecipeToShopping() {
+  const qc = useQueryClient();
+  const { household } = useHouseholdStore();
+
+  return useMutation({
+    mutationFn: async (recipeId: string): Promise<{ added: number }> => {
+      const { data } = await api.post(
+        `/households/${household!.id}/recipes/${recipeId}/add-to-shopping`,
+      );
+      return data.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['shopping_items'] });
+    },
+  });
+}

@@ -1,11 +1,12 @@
-import { View, Text, ScrollView, ActivityIndicator, Pressable } from 'react-native';
+import { useState } from 'react';
+import { View, Text, ScrollView, ActivityIndicator, Pressable, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Image } from 'expo-image';
-import { ArrowLeft, Clock, Share2 } from 'lucide-react-native';
+import { ArrowLeft, Clock, Share2, ShoppingCart } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORS } from '@/constants/colors';
-import { useRecipes } from '@/features/recipes/useRecipes';
+import { useRecipes, useAddRecipeToShopping } from '@/features/recipes/useRecipes';
 
 function PlaceholderHero() {
   return (
@@ -49,6 +50,30 @@ export default function RecipeDetailScreen() {
       </View>
     );
   }
+
+  const addToShopping = useAddRecipeToShopping();
+  const [addedFeedback, setAddedFeedback] = useState<string | null>(null);
+
+  const handleAddToShopping = () => {
+    if (!recipe) return;
+    addToShopping.mutate(recipe.id, {
+      onSuccess: (result) => {
+        if (result.added === 0) {
+          setAddedFeedback(t('recipes.already_in_list'));
+        } else {
+          setAddedFeedback(
+            result.added === 1
+              ? t('recipes.added_to_shopping', { count: result.added })
+              : t('recipes.added_to_shopping_plural', { count: result.added }),
+          );
+        }
+        setTimeout(() => setAddedFeedback(null), 3000);
+      },
+      onError: () => {
+        Alert.alert(t('common.error'));
+      },
+    });
+  };
 
   const handleShare = () => {
     // Placeholder: would share recipe URL
@@ -152,6 +177,36 @@ export default function RecipeDetailScreen() {
                   </View>
                 ))}
               </View>
+            </View>
+          )}
+
+          {/* Add to shopping list button */}
+          {recipe.ingredients.length > 0 && (
+            <View className="gap-2 mt-2">
+              <Pressable
+                onPress={handleAddToShopping}
+                disabled={addToShopping.isPending}
+                className="flex-row items-center justify-center gap-2 h-12 rounded-xl bg-brand-blue"
+              >
+                {({ pressed }) => (
+                  <View
+                    className="flex-row items-center gap-2"
+                    style={{ opacity: pressed || addToShopping.isPending ? 0.7 : 1 }}
+                  >
+                    {addToShopping.isPending ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <ShoppingCart size={18} color="#FFFFFF" strokeWidth={1.5} />
+                    )}
+                    <Text className="text-white font-semibold text-base">
+                      {t('recipes.add_to_shopping')}
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+              {addedFeedback && (
+                <Text className="text-text-secondary text-sm text-center">{addedFeedback}</Text>
+              )}
             </View>
           )}
 

@@ -77,7 +77,11 @@
     "add_step": "Añadir paso",
     "public": "Receta pública",
     "curated_badge": "Fogon",
-    "detail_title": "Receta"
+    "detail_title": "Receta",
+    "add_to_shopping": "Añadir a la lista de compra",
+    "added_to_shopping": "{{count}} ingrediente añadido a la lista",
+    "added_to_shopping_plural": "{{count}} ingredientes añadidos a la lista",
+    "already_in_list": "Todos los ingredientes ya están en la lista"
   },
   "menu": {
     "title": "Menú semanal",

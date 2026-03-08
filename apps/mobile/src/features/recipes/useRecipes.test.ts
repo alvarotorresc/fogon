@@ -1,7 +1,7 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement, type ReactNode } from 'react';
-import { useCreateRecipe } from './useRecipes';
+import { useCreateRecipe, useAddRecipeToShopping } from './useRecipes';
 
 const mockPost = jest.fn().mockResolvedValue({ data: { data: { id: 'recipe-1' } } });
 
@@ -93,5 +93,52 @@ describe('useCreateRecipe', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error?.message).toBe('Network error');
+  });
+});
+
+describe('useAddRecipeToShopping', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('should post to add-to-shopping endpoint and return result', async () => {
+    mockPost.mockResolvedValueOnce({ data: { data: { added: 3 } } });
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useAddRecipeToShopping(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate('recipe-1');
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(mockPost).toHaveBeenCalledWith(
+      '/households/hh-123/recipes/recipe-1/add-to-shopping',
+    );
+    expect(result.current.data).toEqual({ added: 3 });
+  });
+
+  it('should handle zero added (all duplicates)', async () => {
+    mockPost.mockResolvedValueOnce({ data: { data: { added: 0 } } });
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useAddRecipeToShopping(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate('recipe-1');
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual({ added: 0 });
+  });
+
+  it('should handle API error', async () => {
+    mockPost.mockRejectedValueOnce(new Error('Server error'));
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useAddRecipeToShopping(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate('recipe-1');
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.message).toBe('Server error');
   });
 });
