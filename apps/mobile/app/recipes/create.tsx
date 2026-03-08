@@ -11,12 +11,14 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Plus, X, GripVertical } from 'lucide-react-native';
+import { Image } from 'expo-image';
+import { ArrowLeft, Plus, X, GripVertical, Camera } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/constants/useColors';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useCreateRecipe } from '@/features/recipes/useRecipes';
+import { usePickImage, useUploadRecipeImage } from '@/features/recipes/useRecipeImage';
 
 interface IngredientInput {
   key: string;
@@ -40,6 +42,8 @@ export default function CreateRecipeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const createRecipe = useCreateRecipe();
+  const { selectedUri, pickImage, clearSelection } = usePickImage();
+  const uploadImage = useUploadRecipeImage();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -88,7 +92,7 @@ export default function CreateRecipeScreen() {
     const validSteps = steps.filter((s) => s.description.trim());
 
     try {
-      await createRecipe.mutateAsync({
+      const result = await createRecipe.mutateAsync({
         title: title.trim(),
         description: description.trim() || undefined,
         prepTimeMinutes: prepTime ? parseInt(prepTime, 10) : undefined,
@@ -102,11 +106,17 @@ export default function CreateRecipeScreen() {
           description: s.description.trim(),
         })),
       });
+
+      // Upload image if one was selected (best-effort, don't block navigation)
+      if (selectedUri && result?.id) {
+        uploadImage.mutate({ recipeId: result.id, imageUri: selectedUri });
+      }
+
       router.back();
     } catch {
       Alert.alert(t('common.error'));
     }
-  }, [title, description, prepTime, isPublic, ingredients, steps, createRecipe, router, t]);
+  }, [title, description, prepTime, isPublic, ingredients, steps, selectedUri, createRecipe, uploadImage, router, t]);
 
   const canSave = title.trim().length > 0 && !createRecipe.isPending;
 
@@ -139,6 +149,41 @@ export default function CreateRecipeScreen() {
           contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 100, gap: 16 }}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Photo */}
+          <Pressable
+            onPress={pickImage}
+            className="rounded-xl border border-dashed border-border overflow-hidden"
+          >
+            {({ pressed }) => (
+              <View style={{ opacity: pressed ? 0.7 : 1 }}>
+                {selectedUri ? (
+                  <View>
+                    <Image
+                      source={{ uri: selectedUri }}
+                      style={{ height: 160, width: '100%', borderRadius: 12 }}
+                      contentFit="cover"
+                    />
+                    <Pressable
+                      onPress={clearSelection}
+                      className="absolute top-2 right-2 w-7 h-7 rounded-full bg-bg-primary/80 items-center justify-center"
+                    >
+                      {({ pressed: xPressed }) => (
+                        <View style={{ opacity: xPressed ? 0.7 : 1 }}>
+                          <X size={16} color={colors.error} strokeWidth={2} />
+                        </View>
+                      )}
+                    </Pressable>
+                  </View>
+                ) : (
+                  <View className="h-28 items-center justify-center gap-2">
+                    <Camera size={24} color={colors.textTertiary} strokeWidth={1.5} />
+                    <Text className="text-text-tertiary text-sm">{t('recipes.add_photo')}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </Pressable>
+
           {/* Title */}
           <Input
             label={t('recipes.name_placeholder')}

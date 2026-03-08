@@ -3,11 +3,12 @@ import { View, Text, ScrollView, ActivityIndicator, Pressable, Alert, Share } fr
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Image } from 'expo-image';
-import { ArrowLeft, Clock, Share2, ShoppingCart, Pencil, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, Clock, Share2, ShoppingCart, Pencil, Trash2, Camera } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/constants/useColors';
 import { useRecipes, useAddRecipeToShopping, useDeleteRecipe } from '@/features/recipes/useRecipes';
 import { formatRecipeForSharing } from '@/features/recipes/formatRecipeForSharing';
+import { usePickImage, useUploadRecipeImage } from '@/features/recipes/useRecipeImage';
 
 function PlaceholderHero() {
   return (
@@ -55,7 +56,26 @@ export default function RecipeDetailScreen() {
 
   const addToShopping = useAddRecipeToShopping();
   const deleteRecipe = useDeleteRecipe();
+  const { pickImage } = usePickImage();
+  const uploadImage = useUploadRecipeImage();
   const [addedFeedback, setAddedFeedback] = useState<string | null>(null);
+
+  const handleUploadPhoto = async () => {
+    const uri = await pickImage();
+    if (!uri) return;
+
+    uploadImage.mutate(
+      { recipeId: recipe.id, imageUri: uri },
+      {
+        onSuccess: () => {
+          Alert.alert(t('recipes.photo_uploaded'));
+        },
+        onError: () => {
+          Alert.alert(t('recipes.photo_upload_error'));
+        },
+      },
+    );
+  };
 
   const handleAddToShopping = () => {
     if (!recipe) return;
@@ -242,40 +262,64 @@ export default function RecipeDetailScreen() {
             </View>
           )}
 
-          {/* Edit / Delete buttons — only for household recipes */}
+          {/* Edit / Delete / Photo buttons — only for household recipes */}
           {!recipe.isCurated && (
-            <View className="flex-row gap-3 mt-2">
+            <View className="gap-3 mt-2">
               <Pressable
-                onPress={handleEdit}
-                className="flex-1 flex-row items-center justify-center gap-2 h-12 rounded-xl bg-bg-elevated border border-border"
+                onPress={handleUploadPhoto}
+                disabled={uploadImage.isPending}
+                className="flex-row items-center justify-center gap-2 h-12 rounded-xl bg-bg-elevated border border-border"
               >
                 {({ pressed }) => (
-                  <View className="flex-row items-center gap-2" style={{ opacity: pressed ? 0.7 : 1 }}>
-                    <Pencil size={18} color={colors.textPrimary} strokeWidth={1.5} />
+                  <View
+                    className="flex-row items-center gap-2"
+                    style={{ opacity: pressed || uploadImage.isPending ? 0.7 : 1 }}
+                  >
+                    {uploadImage.isPending ? (
+                      <ActivityIndicator size="small" color={colors.textPrimary} />
+                    ) : (
+                      <Camera size={18} color={colors.textPrimary} strokeWidth={1.5} />
+                    )}
                     <Text className="text-text-primary font-semibold text-base">
-                      {t('common.edit')}
+                      {recipe.imageUrl ? t('recipes.change_photo') : t('recipes.add_photo')}
                     </Text>
                   </View>
                 )}
               </Pressable>
 
-              <Pressable
-                onPress={handleDelete}
-                disabled={deleteRecipe.isPending}
-                className="flex-row items-center justify-center gap-2 h-12 rounded-xl bg-bg-elevated border border-error px-5"
-              >
-                {({ pressed }) => (
-                  <View
-                    className="flex-row items-center gap-2"
-                    style={{ opacity: pressed || deleteRecipe.isPending ? 0.7 : 1 }}
-                  >
-                    <Trash2 size={18} color={colors.error} strokeWidth={1.5} />
-                    <Text className="text-error font-semibold text-base">
-                      {t('common.delete')}
-                    </Text>
-                  </View>
-                )}
-              </Pressable>
+              <View className="flex-row gap-3">
+                <Pressable
+                  onPress={handleEdit}
+                  className="flex-1 flex-row items-center justify-center gap-2 h-12 rounded-xl bg-bg-elevated border border-border"
+                >
+                  {({ pressed }) => (
+                    <View className="flex-row items-center gap-2" style={{ opacity: pressed ? 0.7 : 1 }}>
+                      <Pencil size={18} color={colors.textPrimary} strokeWidth={1.5} />
+                      <Text className="text-text-primary font-semibold text-base">
+                        {t('common.edit')}
+                      </Text>
+                    </View>
+                  )}
+                </Pressable>
+
+                <Pressable
+                  onPress={handleDelete}
+                  disabled={deleteRecipe.isPending}
+                  className="flex-row items-center justify-center gap-2 h-12 rounded-xl bg-bg-elevated border border-error px-5"
+                >
+                  {({ pressed }) => (
+                    <View
+                      className="flex-row items-center gap-2"
+                      style={{ opacity: pressed || deleteRecipe.isPending ? 0.7 : 1 }}
+                    >
+                      <Trash2 size={18} color={colors.error} strokeWidth={1.5} />
+                      <Text className="text-error font-semibold text-base">
+                        {t('common.delete')}
+                      </Text>
+                    </View>
+                  )}
+                </Pressable>
+              </View>
             </View>
           )}
 

@@ -12,12 +12,14 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Plus, X, GripVertical } from 'lucide-react-native';
+import { Image } from 'expo-image';
+import { ArrowLeft, Plus, X, GripVertical, Camera } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/constants/useColors';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useRecipes, useUpdateRecipe } from '@/features/recipes/useRecipes';
+import { usePickImage, useUploadRecipeImage } from '@/features/recipes/useRecipeImage';
 
 interface IngredientInput {
   key: string;
@@ -43,6 +45,8 @@ export default function EditRecipeScreen() {
   const insets = useSafeAreaInsets();
   const { data: recipes, isLoading } = useRecipes();
   const updateRecipe = useUpdateRecipe();
+  const { selectedUri, pickImage, clearSelection } = usePickImage();
+  const uploadImage = useUploadRecipeImage();
 
   const recipe = recipes?.find((r) => r.id === id);
 
@@ -133,11 +137,17 @@ export default function EditRecipeScreen() {
           description: s.description.trim(),
         })),
       });
+
+      // Upload image if one was selected (best-effort, don't block navigation)
+      if (selectedUri && id) {
+        uploadImage.mutate({ recipeId: id, imageUri: selectedUri });
+      }
+
       router.back();
     } catch {
       Alert.alert(t('common.error'));
     }
-  }, [id, title, description, prepTime, isPublic, ingredients, steps, updateRecipe, router, t]);
+  }, [id, title, description, prepTime, isPublic, ingredients, steps, selectedUri, updateRecipe, uploadImage, router, t]);
 
   if (isLoading || !initialized) {
     return (
@@ -196,6 +206,53 @@ export default function EditRecipeScreen() {
           contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 100, gap: 16 }}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Photo */}
+          <Pressable
+            onPress={pickImage}
+            className="rounded-xl border border-dashed border-border overflow-hidden"
+          >
+            {({ pressed }) => (
+              <View style={{ opacity: pressed ? 0.7 : 1 }}>
+                {selectedUri ? (
+                  <View>
+                    <Image
+                      source={{ uri: selectedUri }}
+                      style={{ height: 160, width: '100%', borderRadius: 12 }}
+                      contentFit="cover"
+                    />
+                    <Pressable
+                      onPress={clearSelection}
+                      className="absolute top-2 right-2 w-7 h-7 rounded-full bg-bg-primary/80 items-center justify-center"
+                    >
+                      {({ pressed: xPressed }) => (
+                        <View style={{ opacity: xPressed ? 0.7 : 1 }}>
+                          <X size={16} color={colors.error} strokeWidth={2} />
+                        </View>
+                      )}
+                    </Pressable>
+                  </View>
+                ) : recipe?.imageUrl ? (
+                  <View>
+                    <Image
+                      source={{ uri: recipe.imageUrl }}
+                      style={{ height: 160, width: '100%', borderRadius: 12 }}
+                      contentFit="cover"
+                    />
+                    <View className="absolute bottom-2 right-2 bg-bg-primary/80 rounded-full px-3 py-1 flex-row items-center gap-1">
+                      <Camera size={14} color={colors.textSecondary} strokeWidth={1.5} />
+                      <Text className="text-text-secondary text-xs">{t('recipes.change_photo')}</Text>
+                    </View>
+                  </View>
+                ) : (
+                  <View className="h-28 items-center justify-center gap-2">
+                    <Camera size={24} color={colors.textTertiary} strokeWidth={1.5} />
+                    <Text className="text-text-tertiary text-sm">{t('recipes.add_photo')}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </Pressable>
+
           {/* Title */}
           <Input
             label={t('recipes.name_placeholder')}
