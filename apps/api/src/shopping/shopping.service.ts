@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { SupabaseService } from '../supabase/supabase.service';
 
@@ -71,5 +71,29 @@ export class ShoppingService {
       .eq('is_done', true);
 
     if (error) throw new Error(error.message);
+  }
+
+  async remove(householdId: string, itemId: string) {
+    const { data, error } = await this.supabase
+      .from('shopping_items')
+      .delete()
+      .eq('id', itemId)
+      .eq('household_id', householdId)
+      .select('id')
+      .single();
+
+    if (error || !data) throw new NotFoundException('Shopping item not found');
+  }
+
+  async update(householdId: string, itemId: string, name: string, quantity: string | null) {
+    const { data, error } = await this.supabase
+      .from('shopping_items')
+      .update({ name, quantity })
+      .eq('id', itemId)
+      .eq('household_id', householdId)
+      .select('id')
+      .single();
+
+    if (error || !data) throw new NotFoundException('Shopping item not found');
   }
 }

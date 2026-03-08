@@ -2,6 +2,7 @@ import { Controller, Get, Post, Patch, Delete, Body, Param, Req, UseGuards } fro
 import { ShoppingService } from './shopping.service';
 import { CreateShoppingItemDto } from './dto/create-shopping-item.dto';
 import { ToggleShoppingItemDto } from './dto/toggle-shopping-item.dto';
+import { UpdateShoppingItemDto } from './dto/update-shopping-item.dto';
 import { HouseholdMemberGuard } from '../common/guards/household-member.guard';
 
 interface AuthenticatedRequest {
@@ -49,6 +50,25 @@ export class ShoppingController {
   @Delete('done')
   async clearDone(@Param('householdId') householdId: string) {
     await this.shoppingService.clearDone(householdId);
+    return { data: null };
+  }
+
+  @Delete(':itemId')
+  async remove(
+    @Param('householdId') householdId: string,
+    @Param('itemId') itemId: string,
+  ) {
+    await this.shoppingService.remove(householdId, itemId);
+    return { data: null };
+  }
+
+  @Patch(':itemId')
+  async update(
+    @Param('householdId') householdId: string,
+    @Param('itemId') itemId: string,
+    @Body() dto: UpdateShoppingItemDto,
+  ) {
+    await this.shoppingService.update(householdId, itemId, dto.name, dto.quantity ?? null);
     return { data: null };
   }
 }
