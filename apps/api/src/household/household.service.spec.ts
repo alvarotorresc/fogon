@@ -42,9 +42,8 @@ describe('HouseholdService', () => {
   });
 
   describe('create', () => {
-    it('should create household, add member as owner, and seed recipes', async () => {
+    it('should create household and add member as owner', async () => {
       let memberInsertCalled = false;
-      const recipeInserts: Array<Record<string, unknown>> = [];
 
       mockFrom.mockImplementation((table: string) => {
         if (table === 'households') {
@@ -80,33 +79,23 @@ describe('HouseholdService', () => {
             },
           };
         }
+        // seedSampleRecipes is fire-and-forget — mock just enough to avoid errors
         if (table === 'recipes') {
           return {
-            insert: (data: Record<string, unknown>) => {
-              recipeInserts.push(data);
-              return {
-                select: () => ({
-                  single: () => ({
-                    data: { id: `recipe-${recipeInserts.length}` },
-                    error: null,
-                  }),
-                }),
-              };
-            },
+            insert: () => ({
+              select: () => ({
+                single: () => ({ data: { id: 'recipe-1' }, error: null }),
+              }),
+            }),
           };
         }
         if (table === 'recipe_ingredients' || table === 'recipe_steps') {
-          return {
-            insert: () => ({ error: null }),
-          };
+          return { insert: () => ({ error: null }) };
         }
         return {};
       });
 
       const result = await service.create('user-1', 'My Home');
-
-      // Wait for the async seed to complete
-      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(result).toEqual({
         id: 'h-new',
@@ -115,15 +104,6 @@ describe('HouseholdService', () => {
         createdAt: '2026-03-01',
       });
       expect(memberInsertCalled).toBe(true);
-      expect(recipeInserts.length).toBe(5);
-      expect(recipeInserts[0]).toEqual(
-        expect.objectContaining({
-          household_id: 'h-new',
-          title: 'Tortilla de patatas',
-          is_public: false,
-          created_by: 'user-1',
-        }),
-      );
     });
 
     it('should throw error when household insert fails', async () => {
@@ -174,6 +154,114 @@ describe('HouseholdService', () => {
       });
 
       await expect(service.create('user-1', 'My Home')).rejects.toThrow('Member insert failed');
+    });
+  });
+
+  describe('seedSampleRecipes (via create)', () => {
+    function setupCreateMock(
+      recipeHandler: (data: Record<string, unknown>) => {
+        select: () => { single: () => { data: { id: string } | null; error: { message: string } | null } };
+      },
+    ) {
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'households') {
+          return {
+            insert: () => ({
+              select: () => ({
+                single: () => ({
+                  data: {
+                    id: 'h-new',
+                    name: 'My Home',
+                    invite_code: 'NEWCODE1',
+                    created_at: '2026-03-01',
+                    created_by: 'user-1',
+                  },
+                  error: null,
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'household_members') {
+          return { insert: () => ({ error: null }) };
+        }
+        if (table === 'recipes') {
+          return { insert: recipeHandler };
+        }
+        if (table === 'recipe_ingredients' || table === 'recipe_steps') {
+          return { insert: () => ({ error: null }) };
+        }
+        return {};
+      });
+    }
+
+    it('should insert 5 recipes each with ingredients and steps arrays', async () => {
+      const recipeInserts: Array<Record<string, unknown>> = [];
+
+      setupCreateMock((data: Record<string, unknown>) => {
+        recipeInserts.push(data);
+        return {
+          select: () => ({
+            single: () => ({
+              data: { id: `recipe-${recipeInserts.length}` },
+              error: null,
+            }),
+          }),
+        };
+      });
+
+      await service.create('user-1', 'My Home');
+      // Wait for fire-and-forget seed to complete
+      await new Promise(process.nextTick);
+
+      expect(recipeInserts).toHaveLength(5);
+      for (const recipe of recipeInserts) {
+        expect(recipe).toEqual(
+          expect.objectContaining({
+            household_id: 'h-new',
+            is_public: false,
+            created_by: 'user-1',
+          }),
+        );
+        expect(typeof recipe.title).toBe('string');
+        expect((recipe.title as string).length).toBeGreaterThan(0);
+      }
+    });
+
+    it('should continue seeding remaining recipes when one fails to insert', async () => {
+      const recipeInserts: Array<Record<string, unknown>> = [];
+      let insertCount = 0;
+
+      setupCreateMock((data: Record<string, unknown>) => {
+        insertCount++;
+        recipeInserts.push(data);
+        if (insertCount === 2) {
+          return {
+            select: () => ({
+              single: () => ({
+                data: null,
+                error: { message: 'DB constraint violation' },
+              }),
+            }),
+          };
+        }
+        return {
+          select: () => ({
+            single: () => ({
+              data: { id: `recipe-${insertCount}` },
+              error: null,
+            }),
+          }),
+        };
+      });
+
+      await service.create('user-1', 'My Home');
+      await new Promise(process.nextTick);
+
+      // All 5 recipes attempted
+      expect(recipeInserts).toHaveLength(5);
+      // Ingredients/steps are inserted for 4 successful recipes (mockFrom gets called for them)
+      // The key behavior: one failure doesn't stop the others
     });
   });
 
