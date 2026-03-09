@@ -1,4 +1,5 @@
 import {
+  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsNotEmpty,
@@ -54,11 +55,13 @@ export class CreateRecipeDto {
   isPublic?: boolean;
 
   @IsArray()
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => IngredientDto)
   ingredients!: IngredientDto[];
 
   @IsArray()
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => StepDto)
   steps!: StepDto[];

@@ -9,6 +9,7 @@ import {
   Req,
   UseGuards,
   BadRequestException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { RecipeService } from './recipe.service';
 import { RecipeImageService } from './recipe-image.service';
@@ -36,15 +37,15 @@ export class RecipeController {
   ) {}
 
   @Get()
-  async findAll(@Param('householdId') householdId: string) {
+  async findAll(@Param('householdId', ParseUUIDPipe) householdId: string) {
     const recipes = await this.recipeService.findAll(householdId);
     return { data: recipes };
   }
 
   @Get(':recipeId')
   async findById(
-    @Param('householdId') householdId: string,
-    @Param('recipeId') recipeId: string,
+    @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Param('recipeId', ParseUUIDPipe) recipeId: string,
   ) {
     const recipe = await this.recipeService.findById(householdId, recipeId);
     return { data: recipe };
@@ -52,7 +53,7 @@ export class RecipeController {
 
   @Post()
   async create(
-    @Param('householdId') householdId: string,
+    @Param('householdId', ParseUUIDPipe) householdId: string,
     @Body() dto: CreateRecipeDto,
     @Req() req: AuthenticatedRequest,
   ) {
@@ -62,8 +63,8 @@ export class RecipeController {
 
   @Post(':recipeId/add-to-shopping')
   async addToShopping(
-    @Param('householdId') householdId: string,
-    @Param('recipeId') recipeId: string,
+    @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Param('recipeId', ParseUUIDPipe) recipeId: string,
     @Req() req: AuthenticatedRequest,
   ) {
     const result = await this.recipeService.addIngredientsToShopping(
@@ -76,8 +77,8 @@ export class RecipeController {
 
   @Post(':recipeId/image')
   async uploadImage(
-    @Param('householdId') householdId: string,
-    @Param('recipeId') recipeId: string,
+    @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Param('recipeId', ParseUUIDPipe) recipeId: string,
     @Req() req: FastifyRequestWithFile,
   ) {
     const file = await req.file();
@@ -98,8 +99,8 @@ export class RecipeController {
 
   @Delete(':recipeId')
   async remove(
-    @Param('householdId') householdId: string,
-    @Param('recipeId') recipeId: string,
+    @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Param('recipeId', ParseUUIDPipe) recipeId: string,
   ) {
     await this.recipeService.remove(householdId, recipeId);
     return { data: null };
@@ -107,8 +108,8 @@ export class RecipeController {
 
   @Put(':recipeId')
   async update(
-    @Param('householdId') householdId: string,
-    @Param('recipeId') recipeId: string,
+    @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Param('recipeId', ParseUUIDPipe) recipeId: string,
     @Body() dto: UpdateRecipeDto,
   ) {
     const result = await this.recipeService.update(householdId, recipeId, dto);
