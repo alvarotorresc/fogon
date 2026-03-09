@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useCallback } from 'react';
 import { View, Text, FlatList, Pressable, ActivityIndicator, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +9,7 @@ import { useRecipes } from '@/features/recipes/useRecipes';
 import { useMealPlan } from '@/features/meal-plan/useMealPlan';
 import { RecipeCard } from '@/features/recipes/RecipeCard';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { useDebounce } from '@/lib/useDebounce';
+import { useRecipeSearch } from '@/features/recipes/useRecipeSearch';
 import type { Recipe, MealPlanEntry } from '@fogon/types';
 
 type FilterOption = 'all' | 'curated' | 'mine';
@@ -141,33 +141,18 @@ export default function MenuScreen() {
   const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [filter, setFilter] = useState<FilterOption>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const debouncedSearch = useDebounce(searchQuery, 300);
 
   const { data: recipes, isLoading: recipesLoading, error: recipesError, refetch: refetchRecipes } = useRecipes();
   const { data: mealPlan } = useMealPlan();
 
-  const filteredRecipes = useMemo(() => {
-    if (!recipes) return [];
-    let result = recipes;
-
-    switch (filter) {
-      case 'curated':
-        result = result.filter((r) => r.isCurated);
-        break;
-      case 'mine':
-        result = result.filter((r) => !r.isCurated);
-        break;
-    }
-
-    const query = debouncedSearch.trim().toLowerCase();
-    if (query) {
-      result = result.filter((r) => r.title.toLowerCase().includes(query));
-    }
-
-    return result;
-  }, [recipes, filter, debouncedSearch]);
+  const {
+    filter,
+    setFilter,
+    searchQuery,
+    setSearchQuery,
+    debouncedSearch,
+    filteredRecipes,
+  } = useRecipeSearch(recipes ?? []);
 
   const handleRecipePress = useCallback(
     (recipe: Recipe) => {

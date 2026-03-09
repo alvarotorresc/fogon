@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react-native';
 import { useDebounce } from '@/lib/useDebounce';
+import { filterRecipes, useRecipeSearch } from './useRecipeSearch';
 
 jest.useFakeTimers();
 
@@ -55,37 +56,13 @@ describe('useDebounce', () => {
   });
 });
 
-describe('Recipe search filtering', () => {
+describe('filterRecipes', () => {
   const recipes = [
     { id: '1', title: 'Pasta Carbonara', isCurated: true },
     { id: '2', title: 'Chicken Curry', isCurated: false },
     { id: '3', title: 'Pasta Bolognese', isCurated: true },
     { id: '4', title: 'Greek Salad', isCurated: false },
   ];
-
-  function filterRecipes(
-    items: typeof recipes,
-    query: string,
-    filter: 'all' | 'curated' | 'mine',
-  ) {
-    let result = items;
-
-    switch (filter) {
-      case 'curated':
-        result = result.filter((r) => r.isCurated);
-        break;
-      case 'mine':
-        result = result.filter((r) => !r.isCurated);
-        break;
-    }
-
-    const trimmed = query.trim().toLowerCase();
-    if (trimmed) {
-      result = result.filter((r) => r.title.toLowerCase().includes(trimmed));
-    }
-
-    return result;
-  }
 
   it('should return all recipes when query is empty and filter is all', () => {
     const result = filterRecipes(recipes, '', 'all');
@@ -117,5 +94,52 @@ describe('Recipe search filtering', () => {
   it('should handle whitespace-only query as empty', () => {
     const result = filterRecipes(recipes, '   ', 'all');
     expect(result).toHaveLength(4);
+  });
+});
+
+describe('useRecipeSearch', () => {
+  const recipes = [
+    { id: '1', title: 'Pasta Carbonara', isCurated: true },
+    { id: '2', title: 'Chicken Curry', isCurated: false },
+  ];
+
+  it('should return all recipes initially', () => {
+    const { result } = renderHook(() => useRecipeSearch(recipes));
+    expect(result.current.filteredRecipes).toHaveLength(2);
+    expect(result.current.filter).toBe('all');
+    expect(result.current.searchQuery).toBe('');
+  });
+
+  it('should filter by category when filter changes', () => {
+    const { result } = renderHook(() => useRecipeSearch(recipes));
+
+    act(() => {
+      result.current.setFilter('curated');
+    });
+
+    act(() => {
+      jest.advanceTimersByTime(0);
+    });
+
+    expect(result.current.filteredRecipes).toHaveLength(1);
+    expect(result.current.filteredRecipes[0].title).toBe('Pasta Carbonara');
+  });
+
+  it('should debounce search query before filtering', () => {
+    const { result } = renderHook(() => useRecipeSearch(recipes));
+
+    act(() => {
+      result.current.setSearchQuery('chicken');
+    });
+
+    // Before debounce, still shows all
+    expect(result.current.filteredRecipes).toHaveLength(2);
+
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+
+    expect(result.current.filteredRecipes).toHaveLength(1);
+    expect(result.current.filteredRecipes[0].title).toBe('Chicken Curry');
   });
 });
