@@ -1,12 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { SupabaseService } from '../supabase/supabase.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { ShoppingGateway } from './shopping.gateway';
+import { SHOPPING_EVENTS } from '@fogon/types';
 
 @Injectable()
 export class ShoppingService {
   private readonly supabase: SupabaseClient;
+  private readonly logger = new Logger(ShoppingService.name);
 
-  constructor(private readonly supabaseService: SupabaseService) {
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly shoppingGateway: ShoppingGateway,
+    private readonly notificationsService: NotificationsService,
+  ) {
     this.supabase = this.supabaseService.getClient();
   }
 
@@ -47,6 +55,12 @@ export class ShoppingService {
     });
 
     if (error) throw new Error(error.message);
+
+    this.shoppingGateway.emitToHousehold(householdId, SHOPPING_EVENTS.CREATED, {
+      householdId,
+    });
+
+    this.sendNotification(householdId, userId, `ha añadido "${name}" a la lista de la compra`);
   }
 
   async toggle(householdId: string, itemId: string, userId: string, isDone: boolean) {
@@ -63,6 +77,11 @@ export class ShoppingService {
       .single();
 
     if (error || !data) throw new NotFoundException('Shopping item not found');
+
+    this.shoppingGateway.emitToHousehold(householdId, SHOPPING_EVENTS.TOGGLED, {
+      householdId,
+      itemId,
+    });
   }
 
   async clearDone(householdId: string) {
@@ -73,6 +92,10 @@ export class ShoppingService {
       .eq('is_done', true);
 
     if (error) throw new Error(error.message);
+
+    this.shoppingGateway.emitToHousehold(householdId, SHOPPING_EVENTS.CLEARED, {
+      householdId,
+    });
   }
 
   async remove(householdId: string, itemId: string) {
@@ -85,6 +108,11 @@ export class ShoppingService {
       .single();
 
     if (error || !data) throw new NotFoundException('Shopping item not found');
+
+    this.shoppingGateway.emitToHousehold(householdId, SHOPPING_EVENTS.DELETED, {
+      householdId,
+      itemId,
+    });
   }
 
   async update(householdId: string, itemId: string, name: string, quantity: string | null) {
@@ -97,5 +125,36 @@ export class ShoppingService {
       .single();
 
     if (error || !data) throw new NotFoundException('Shopping item not found');
+
+    this.shoppingGateway.emitToHousehold(householdId, SHOPPING_EVENTS.UPDATED, {
+      householdId,
+      itemId,
+    });
+  }
+
+  private sendNotification(householdId: string, userId: string, action: string): void {
+    this.getDisplayName(householdId, userId)
+      .then((displayName) => {
+        this.notificationsService.sendToHousehold({
+          householdId,
+          title: 'Fogon',
+          body: `${displayName} ${action}`,
+          excludeUserId: userId,
+        });
+      })
+      .catch((error) => {
+        this.logger.warn('Failed to send shopping notification', error);
+      });
+  }
+
+  private async getDisplayName(householdId: string, userId: string): Promise<string> {
+    const { data } = await this.supabase
+      .from('household_members')
+      .select('display_name')
+      .eq('household_id', householdId)
+      .eq('user_id', userId)
+      .single();
+
+    return (data?.display_name as string) ?? 'Alguien';
   }
 }

@@ -1,9 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { ShoppingService } from './shopping.service';
+import { ShoppingGateway } from './shopping.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 import { SupabaseService } from '../supabase/supabase.service';
+import { SHOPPING_EVENTS } from '@fogon/types';
 
 const mockFrom = jest.fn();
+const mockEmitToHousehold = jest.fn();
+const mockSendToHousehold = jest.fn();
 
 describe('ShoppingService', () => {
   let service: ShoppingService;
@@ -17,6 +22,18 @@ describe('ShoppingService', () => {
           provide: SupabaseService,
           useValue: {
             getClient: () => ({ from: mockFrom }),
+          },
+        },
+        {
+          provide: ShoppingGateway,
+          useValue: {
+            emitToHousehold: mockEmitToHousehold,
+          },
+        },
+        {
+          provide: NotificationsService,
+          useValue: {
+            sendToHousehold: mockSendToHousehold,
           },
         },
       ],
@@ -130,6 +147,19 @@ describe('ShoppingService', () => {
       });
     });
 
+    it('emits shopping:created event after insert', async () => {
+      const mockInsert = jest.fn().mockReturnValue({ error: null });
+      mockFrom.mockReturnValue({ insert: mockInsert });
+
+      await service.create('h-1', 'user-1', 'Eggs', '12', 'basics');
+
+      expect(mockEmitToHousehold).toHaveBeenCalledWith(
+        'h-1',
+        SHOPPING_EVENTS.CREATED,
+        { householdId: 'h-1' },
+      );
+    });
+
     it('throws on insert error', async () => {
       mockFrom.mockReturnValue({
         insert: () => ({ error: { message: 'Insert failed' } }),
@@ -138,6 +168,7 @@ describe('ShoppingService', () => {
       await expect(service.create('h-1', 'user-1', 'Eggs', null, 'basics')).rejects.toThrow(
         'Insert failed',
       );
+      expect(mockEmitToHousehold).not.toHaveBeenCalled();
     });
   });
 
@@ -183,6 +214,23 @@ describe('ShoppingService', () => {
       expect(mockEqHousehold).toHaveBeenCalledWith('household_id', 'h-1');
     });
 
+    it('emits shopping:toggled event after toggle', async () => {
+      const mockSingle = jest.fn().mockReturnValue({ data: { id: 'item-1' }, error: null });
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
+      const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
+      const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
+      mockFrom.mockReturnValue({ update: mockUpdate });
+
+      await service.toggle('h-1', 'item-1', 'user-1', true);
+
+      expect(mockEmitToHousehold).toHaveBeenCalledWith(
+        'h-1',
+        SHOPPING_EVENTS.TOGGLED,
+        { householdId: 'h-1', itemId: 'item-1' },
+      );
+    });
+
     it('throws NotFoundException when item does not exist', async () => {
       const mockSingle = jest.fn().mockReturnValue({ data: null, error: { code: 'PGRST116' } });
       const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
@@ -192,6 +240,7 @@ describe('ShoppingService', () => {
       mockFrom.mockReturnValue({ update: mockUpdate });
 
       await expect(service.toggle('h-1', 'bad-id', 'user-1', true)).rejects.toThrow(NotFoundException);
+      expect(mockEmitToHousehold).not.toHaveBeenCalled();
     });
   });
 
@@ -207,6 +256,21 @@ describe('ShoppingService', () => {
       expect(mockFrom).toHaveBeenCalledWith('shopping_items');
       expect(mockEqHousehold).toHaveBeenCalledWith('household_id', 'h-1');
       expect(mockEqDone).toHaveBeenCalledWith('is_done', true);
+    });
+
+    it('emits shopping:cleared event after clearing done items', async () => {
+      const mockEqDone = jest.fn().mockReturnValue({ error: null });
+      const mockEqHousehold = jest.fn().mockReturnValue({ eq: mockEqDone });
+      const mockDelete = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+      mockFrom.mockReturnValue({ delete: mockDelete });
+
+      await service.clearDone('h-1');
+
+      expect(mockEmitToHousehold).toHaveBeenCalledWith(
+        'h-1',
+        SHOPPING_EVENTS.CLEARED,
+        { householdId: 'h-1' },
+      );
     });
   });
 
@@ -226,6 +290,23 @@ describe('ShoppingService', () => {
       expect(mockEqHousehold).toHaveBeenCalledWith('household_id', 'h-1');
     });
 
+    it('emits shopping:deleted event after remove', async () => {
+      const mockSingle = jest.fn().mockReturnValue({ data: { id: 'item-1' }, error: null });
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
+      const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
+      const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+      const mockDelete = jest.fn().mockReturnValue({ eq: mockEqId });
+      mockFrom.mockReturnValue({ delete: mockDelete });
+
+      await service.remove('h-1', 'item-1');
+
+      expect(mockEmitToHousehold).toHaveBeenCalledWith(
+        'h-1',
+        SHOPPING_EVENTS.DELETED,
+        { householdId: 'h-1', itemId: 'item-1' },
+      );
+    });
+
     it('throws NotFoundException when item does not exist', async () => {
       const mockSingle = jest.fn().mockReturnValue({ data: null, error: { code: 'PGRST116' } });
       const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
@@ -235,6 +316,7 @@ describe('ShoppingService', () => {
       mockFrom.mockReturnValue({ delete: mockDelete });
 
       await expect(service.remove('h-1', 'bad-id')).rejects.toThrow(NotFoundException);
+      expect(mockEmitToHousehold).not.toHaveBeenCalled();
     });
   });
 
@@ -268,6 +350,23 @@ describe('ShoppingService', () => {
       expect(mockUpdate).toHaveBeenCalledWith({ name: 'Just Name', quantity: null });
     });
 
+    it('emits shopping:updated event after update', async () => {
+      const mockSingle = jest.fn().mockReturnValue({ data: { id: 'item-1' }, error: null });
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
+      const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
+      const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
+      mockFrom.mockReturnValue({ update: mockUpdate });
+
+      await service.update('h-1', 'item-1', 'Updated Name', '3kg');
+
+      expect(mockEmitToHousehold).toHaveBeenCalledWith(
+        'h-1',
+        SHOPPING_EVENTS.UPDATED,
+        { householdId: 'h-1', itemId: 'item-1' },
+      );
+    });
+
     it('throws NotFoundException when item does not exist', async () => {
       const mockSingle = jest.fn().mockReturnValue({ data: null, error: { code: 'PGRST116' } });
       const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
@@ -277,6 +376,7 @@ describe('ShoppingService', () => {
       mockFrom.mockReturnValue({ update: mockUpdate });
 
       await expect(service.update('h-1', 'bad-id', 'Nope', null)).rejects.toThrow(NotFoundException);
+      expect(mockEmitToHousehold).not.toHaveBeenCalled();
     });
   });
 });

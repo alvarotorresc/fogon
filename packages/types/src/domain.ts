@@ -74,3 +74,24 @@ export interface WeeklyMealPlan {
   weekStart: string;
   entries: MealPlanEntry[];
 }
+
+// --- WebSocket Events ---
+
+export const SHOPPING_EVENTS = {
+  CREATED: 'shopping:created',
+  TOGGLED: 'shopping:toggled',
+  UPDATED: 'shopping:updated',
+  DELETED: 'shopping:deleted',
+  CLEARED: 'shopping:cleared',
+  JOIN_HOUSEHOLD: 'shopping:join',
+} as const;
+
+export type ShoppingEventName = (typeof SHOPPING_EVENTS)[keyof typeof SHOPPING_EVENTS];
+
+export interface ShoppingEventPayload {
+  householdId: string;
+}
+
+export interface ShoppingItemEventPayload extends ShoppingEventPayload {
+  itemId: string;
+}
