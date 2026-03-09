@@ -132,6 +132,20 @@ describe('NotificationsService', () => {
       expect(mockEqHousehold).toHaveBeenCalledWith('household_id', 'h-1');
       expect(mockNeq).toHaveBeenCalledWith('user_id', 'user-1');
       expect(mockIn).toHaveBeenCalledWith('user_id', ['user-2', 'user-3']);
+      expect(mockSendPushNotificationsAsync).toHaveBeenCalledWith([
+        {
+          to: 'ExponentPushToken[token2]',
+          sound: 'default',
+          title: 'Fogon',
+          body: 'Alice added items to the shopping list',
+        },
+        {
+          to: 'ExponentPushToken[token3]',
+          sound: 'default',
+          title: 'Fogon',
+          body: 'Alice added items to the shopping list',
+        },
+      ]);
     });
 
     it('does nothing when no members have tokens', async () => {
@@ -162,7 +176,7 @@ describe('NotificationsService', () => {
         excludeUserId: 'user-1',
       });
 
-      // Should not throw
+      expect(mockSendPushNotificationsAsync).not.toHaveBeenCalled();
     });
 
     it('does nothing when there are no other members', async () => {
@@ -201,6 +215,8 @@ describe('NotificationsService', () => {
         body: 'Test',
         excludeUserId: 'user-1',
       });
+
+      expect(mockSendPushNotificationsAsync).not.toHaveBeenCalled();
     });
   });
 });

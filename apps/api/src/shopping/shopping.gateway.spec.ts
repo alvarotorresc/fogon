@@ -203,23 +203,76 @@ describe('ShoppingGateway', () => {
     });
   });
 
-  describe('emitToHousehold', () => {
-    it('emits event to household room', () => {
-      gateway.emitToHousehold('h-1', SHOPPING_EVENTS.CREATED, { householdId: 'h-1' });
+  describe('rate limiting', () => {
+    it('disconnects client after exceeding 10 join events per minute', async () => {
+      mockSelect.mockResolvedValue({ data: { id: 'member-1' }, error: null });
 
-      expect(gateway.server.to).toHaveBeenCalledWith('household:h-1');
+      const client = createMockSocket();
+      client.data = { userId: 'user-1' };
+
+      const payload = { householdId: '00000000-0000-0000-0000-000000000001' };
+
+      // First 10 calls should succeed
+      for (let i = 0; i < 10; i++) {
+        const result = await gateway.handleJoinHousehold(client, payload);
+        expect(result.success).toBe(true);
+      }
+
+      // 11th call should be rate limited
+      const result = await gateway.handleJoinHousehold(client, payload);
+
+      expect(result).toEqual({ success: false, message: 'Rate limit exceeded' });
+      expect(client.emit).toHaveBeenCalledWith('error', { message: 'Rate limit exceeded' });
+      expect(client.disconnect).toHaveBeenCalledWith(true);
     });
 
-    it('excludes specific socket when provided', () => {
+    it('cleans up rate limit entry on disconnect', async () => {
+      mockSelect.mockResolvedValue({ data: { id: 'member-1' }, error: null });
+
+      const client = createMockSocket();
+      client.data = { userId: 'user-1' };
+
+      const payload = { householdId: '00000000-0000-0000-0000-000000000001' };
+
+      // Use up some rate limit
+      for (let i = 0; i < 5; i++) {
+        await gateway.handleJoinHousehold(client, payload);
+      }
+
+      // Disconnect and reconnect (simulated by clearing data)
+      gateway.handleDisconnect(client);
+
+      // After disconnect, rate limit should be reset — 10 more calls should work
+      for (let i = 0; i < 10; i++) {
+        const result = await gateway.handleJoinHousehold(client, payload);
+        expect(result.success).toBe(true);
+      }
+    });
+  });
+
+  describe('emitToHousehold', () => {
+    it('should emit event with payload to household room', () => {
+      const payload = { householdId: 'h-1', item: 'Tomatoes' };
+      gateway.emitToHousehold('h-1', SHOPPING_EVENTS.CREATED, payload);
+
+      expect(gateway.server.to).toHaveBeenCalledWith('household:h-1');
+      const toResult = (gateway.server.to as jest.Mock).mock.results[0].value;
+      expect(toResult.emit).toHaveBeenCalledWith(SHOPPING_EVENTS.CREATED, payload);
+    });
+
+    it('should exclude specific socket and emit event when excludeSocketId provided', () => {
+      const payload = { householdId: 'h-1', item: 'Onions' };
       gateway.emitToHousehold(
         'h-1',
         SHOPPING_EVENTS.CREATED,
-        { householdId: 'h-1' },
+        payload,
         'socket-to-exclude',
       );
 
       const toResult = (gateway.server.to as jest.Mock).mock.results[0].value;
       expect(toResult.except).toHaveBeenCalledWith('socket-to-exclude');
+      const exceptResult = toResult.except.mock.results[0].value;
+      expect(exceptResult.emit).toHaveBeenCalledWith(SHOPPING_EVENTS.CREATED, payload);
     });
   });
 });

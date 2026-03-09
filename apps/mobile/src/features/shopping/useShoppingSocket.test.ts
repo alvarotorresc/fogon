@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react-native';
+import { renderHook, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement, type ReactNode } from 'react';
 import { useShoppingSocket } from './useShoppingSocket';
@@ -52,29 +52,29 @@ describe('useShoppingSocket', () => {
     jest.clearAllMocks();
   });
 
-  it('connects to WebSocket with auth token', async () => {
+  it('should connect to WebSocket with auth token when household exists', async () => {
     const wrapper = createWrapper();
     renderHook(() => useShoppingSocket(), { wrapper });
 
-    // Wait for async connect
-    await new Promise((resolve) => setTimeout(resolve, 10));
-
-    expect(mockIo).toHaveBeenCalledWith(
-      expect.stringContaining('/shopping'),
-      expect.objectContaining({
-        auth: { token: 'test-jwt-token' },
-        transports: ['websocket'],
-      }),
-    );
+    await waitFor(() => {
+      expect(mockIo).toHaveBeenCalledWith(
+        expect.stringContaining('/shopping'),
+        expect.objectContaining({
+          auth: { token: 'test-jwt-token' },
+          transports: ['websocket'],
+        }),
+      );
+    });
   });
 
-  it('joins household room on connect', async () => {
+  it('should join household room when socket connects', async () => {
     const wrapper = createWrapper();
     renderHook(() => useShoppingSocket(), { wrapper });
 
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await waitFor(() => {
+      expect(mockOn).toHaveBeenCalled();
+    });
 
-    // Find the 'connect' handler and call it
     const connectCall = mockOn.mock.calls.find(
       (call: [string, () => void]) => call[0] === 'connect',
     );
@@ -87,11 +87,13 @@ describe('useShoppingSocket', () => {
     });
   });
 
-  it('registers listeners for all shopping events', async () => {
+  it('should register listeners for all shopping events when connected', async () => {
     const wrapper = createWrapper();
     renderHook(() => useShoppingSocket(), { wrapper });
 
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await waitFor(() => {
+      expect(mockOn).toHaveBeenCalled();
+    });
 
     const registeredEvents = mockOn.mock.calls.map((call: [string, () => void]) => call[0]);
 
@@ -102,14 +104,47 @@ describe('useShoppingSocket', () => {
     expect(registeredEvents).toContain(SHOPPING_EVENTS.CLEARED);
   });
 
-  it('disconnects socket on unmount', async () => {
+  it('should disconnect socket when component unmounts', async () => {
     const wrapper = createWrapper();
     const { unmount } = renderHook(() => useShoppingSocket(), { wrapper });
 
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await waitFor(() => {
+      expect(mockIo).toHaveBeenCalled();
+    });
 
     unmount();
 
     expect(mockDisconnect).toHaveBeenCalled();
+  });
+
+  it('should not connect when household is null', async () => {
+    const householdStoreMock = jest.requireMock('@/store/householdStore');
+    const original = householdStoreMock.useHouseholdStore;
+    householdStoreMock.useHouseholdStore = () => ({ household: null });
+
+    const wrapper = createWrapper();
+    renderHook(() => useShoppingSocket(), { wrapper });
+
+    // Give the effect a chance to run (if it would)
+    await new Promise((resolve) => process.nextTick(resolve));
+
+    expect(mockIo).not.toHaveBeenCalled();
+
+    householdStoreMock.useHouseholdStore = original;
+  });
+
+  it('should not connect when session has no access_token', async () => {
+    const supabaseMock = jest.requireMock('@/lib/supabase');
+    supabaseMock.supabase.auth.getSession.mockResolvedValueOnce({
+      data: { session: null },
+    });
+
+    const wrapper = createWrapper();
+    renderHook(() => useShoppingSocket(), { wrapper });
+
+    // Give the effect a chance to run
+    await new Promise((resolve) => process.nextTick(resolve));
+
+    expect(mockIo).not.toHaveBeenCalled();
   });
 });
