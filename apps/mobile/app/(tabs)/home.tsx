@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { View, Text, FlatList, Pressable, ActivityIndicator, Alert, Share } from 'react-native';
+import { View, Text, FlatList, Pressable, ActivityIndicator, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { Copy, UserPlus, LogOut, Settings, Share2 } from 'lucide-react-native';
@@ -8,6 +8,7 @@ import { useColors } from '@/constants/useColors';
 import { useHouseholdStore } from '@/store/householdStore';
 import { useHouseholdMembers } from '@/features/household/useHouseholdData';
 import { useLeaveHousehold } from '@/features/auth/useHousehold';
+import { useShareInvite } from '@/features/household/useShareInvite';
 import type { HouseholdMember } from '@fogon/types';
 
 function MemberAvatar({ member }: { member: HouseholdMember }) {
@@ -57,25 +58,7 @@ export default function HomeScreen() {
   const { household } = useHouseholdStore();
   const { data: members, isLoading, error, refetch } = useHouseholdMembers();
   const { leaveHousehold } = useLeaveHousehold();
-
-  const handleCopyCode = useCallback(async () => {
-    if (!household?.inviteCode) return;
-    try {
-      await Share.share({ message: household.inviteCode });
-    } catch {
-      // User cancelled
-    }
-  }, [household]);
-
-  const handleShareInvite = useCallback(async () => {
-    if (!household?.inviteCode) return;
-    const message = t('hogar.share_invite', { code: household.inviteCode });
-    try {
-      await Share.share({ message });
-    } catch {
-      // User cancelled
-    }
-  }, [household, t]);
+  const { shareInvite: handleShareInvite, copyCode: handleCopyCode } = useShareInvite(household?.inviteCode);
 
   const handleLeave = useCallback(() => {
     Alert.alert(t('hogar.leave'), t('hogar.leave_confirm'), [

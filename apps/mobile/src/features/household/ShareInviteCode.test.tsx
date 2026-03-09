@@ -1,81 +1,67 @@
 import { Share } from 'react-native';
-import { render, screen, fireEvent } from '@testing-library/react-native';
-import { View, Text, Pressable } from 'react-native';
-import { useCallback } from 'react';
+import { renderHook, act } from '@testing-library/react-native';
+import { useShareInvite } from './useShareInvite';
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string>) => {
       const translations: Record<string, string> = {
         'hogar.share_invite': `Join my household on Fogon! Use the code: ${params?.code ?? ''}`,
-        'hogar.share_button': 'Share code',
       };
       return translations[key] ?? key;
     },
   }),
 }));
 
-jest.mock('lucide-react-native', () => ({
-  Share2: () => 'Share2',
-}));
-
 jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' });
 
-/**
- * Minimal component that replicates the share invite logic from home.tsx
- * to test the Share.share call in isolation.
- */
-function ShareInviteButton({ inviteCode }: { inviteCode: string }) {
-  const handleShare = useCallback(async () => {
-    const message = `Join my household on Fogon! Use the code: ${inviteCode}`;
-    try {
-      await Share.share({ message });
-    } catch {
-      // User cancelled
-    }
-  }, [inviteCode]);
-
-  return (
-    <View>
-      <Text>Code: {inviteCode}</Text>
-      <Pressable onPress={handleShare} accessibilityRole="button" accessibilityLabel="Share code">
-        <Text>Share code</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-describe('Share invite code', () => {
+describe('useShareInvite', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should call Share.share with the localized message including the code', async () => {
-    render(<ShareInviteButton inviteCode="ABC123" />);
+  it('should call Share.share with localized message when shareInvite is called', async () => {
+    const { result } = renderHook(() => useShareInvite('ABC123'));
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Share code' }));
+    await act(async () => {
+      await result.current.shareInvite();
+    });
 
     expect(Share.share).toHaveBeenCalledWith({
       message: 'Join my household on Fogon! Use the code: ABC123',
     });
   });
 
-  it('should display the invite code', () => {
-    render(<ShareInviteButton inviteCode="XYZ789" />);
+  it('should call Share.share with raw code when copyCode is called', async () => {
+    const { result } = renderHook(() => useShareInvite('XYZ789'));
 
-    expect(screen.getByText('Code: XYZ789')).toBeTruthy();
+    await act(async () => {
+      await result.current.copyCode();
+    });
+
+    expect(Share.share).toHaveBeenCalledWith({
+      message: 'XYZ789',
+    });
   });
 
-  it('should not crash if Share.share throws', async () => {
+  it('should not call Share.share when inviteCode is undefined', async () => {
+    const { result } = renderHook(() => useShareInvite(undefined));
+
+    await act(async () => {
+      await result.current.shareInvite();
+    });
+
+    expect(Share.share).not.toHaveBeenCalled();
+  });
+
+  it('should not crash when Share.share throws', async () => {
     (Share.share as jest.Mock).mockRejectedValueOnce(new Error('User cancelled'));
 
-    render(<ShareInviteButton inviteCode="ABC123" />);
+    const { result } = renderHook(() => useShareInvite('ABC123'));
 
-    // Should not throw — the component catches the error
-    fireEvent.press(screen.getByRole('button', { name: 'Share code' }));
-
-    // Flush microtasks
-    await Promise.resolve();
+    await act(async () => {
+      await result.current.shareInvite();
+    });
 
     expect(Share.share).toHaveBeenCalledTimes(1);
   });
