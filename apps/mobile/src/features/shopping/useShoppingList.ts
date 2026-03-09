@@ -45,15 +45,27 @@ export function useAddShoppingItem() {
   });
 }
 
+export interface ToggleResult {
+  pantryUpdated: boolean;
+}
+
 export function useToggleShoppingItem() {
   const qc = useQueryClient();
   const { household } = useHouseholdStore();
 
   return useMutation({
-    mutationFn: async ({ id, isDone }: { id: string; isDone: boolean }) => {
-      await api.patch(`/households/${household!.id}/shopping/${id}/toggle`, { isDone });
+    mutationFn: async ({ id, isDone }: { id: string; isDone: boolean }): Promise<ToggleResult> => {
+      const { data } = await api.patch(`/households/${household!.id}/shopping/${id}/toggle`, {
+        isDone,
+      });
+      return data.data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: [QUERY_KEY] }),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: [QUERY_KEY] });
+      if (result?.pantryUpdated) {
+        qc.invalidateQueries({ queryKey: ['pantry_items'] });
+      }
+    },
   });
 }
 

@@ -95,8 +95,8 @@ describe('ShoppingController', () => {
   });
 
   describe('toggle', () => {
-    it('should return { data: null } when item is toggled', async () => {
-      mockShoppingService.toggle.mockResolvedValue(undefined);
+    it('should return { data: { pantryUpdated } } when item is toggled', async () => {
+      mockShoppingService.toggle.mockResolvedValue({ pantryUpdated: true });
 
       const result = await controller.toggle(
         'h-1',
@@ -105,8 +105,21 @@ describe('ShoppingController', () => {
         { userId: 'user-1' },
       );
 
-      expect(result).toEqual({ data: null });
+      expect(result).toEqual({ data: { pantryUpdated: true } });
       expect(mockShoppingService.toggle).toHaveBeenCalledWith('h-1', 'i-1', 'user-1', true);
+    });
+
+    it('should return pantryUpdated false when toggling off', async () => {
+      mockShoppingService.toggle.mockResolvedValue({ pantryUpdated: false });
+
+      const result = await controller.toggle(
+        'h-1',
+        'i-1',
+        { isDone: false },
+        { userId: 'user-1' },
+      );
+
+      expect(result).toEqual({ data: { pantryUpdated: false } });
     });
   });
 

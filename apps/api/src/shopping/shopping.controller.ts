@@ -43,8 +43,8 @@ export class ShoppingController {
     @Body() dto: ToggleShoppingItemDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    await this.shoppingService.toggle(householdId, itemId, req.userId, dto.isDone);
-    return { data: null };
+    const result = await this.shoppingService.toggle(householdId, itemId, req.userId, dto.isDone);
+    return { data: { pantryUpdated: result.pantryUpdated } };
   }
 
   @Delete('done')

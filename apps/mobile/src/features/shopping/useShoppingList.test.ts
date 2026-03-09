@@ -10,7 +10,7 @@ import {
 } from './useShoppingList';
 
 const mockPost = jest.fn().mockResolvedValue({ data: { data: null } });
-const mockPatch = jest.fn().mockResolvedValue({ data: { data: null } });
+const mockPatch = jest.fn().mockResolvedValue({ data: { data: { pantryUpdated: false } } });
 const mockDelete = jest.fn().mockResolvedValue({ data: { data: null } });
 
 jest.mock('@/lib/api', () => ({

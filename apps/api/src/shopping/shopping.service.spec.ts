@@ -173,12 +173,18 @@ describe('ShoppingService', () => {
   });
 
   describe('toggle', () => {
-    it('updates item to done with userId and timestamp, scoped to household', async () => {
-      const mockSingle = jest.fn().mockReturnValue({ data: { id: 'item-1' }, error: null });
+    function setupToggleMock(itemData: { id: string; name: string } | null = { id: 'item-1', name: 'Milk' }) {
+      const error = itemData ? null : { code: 'PGRST116' };
+      const mockSingle = jest.fn().mockReturnValue({ data: itemData, error });
       const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
       const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
       const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
       const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
+      return { mockUpdate, mockEqId, mockEqHousehold };
+    }
+
+    it('updates item to done with userId and timestamp, scoped to household', async () => {
+      const { mockUpdate, mockEqId, mockEqHousehold } = setupToggleMock();
       mockFrom.mockReturnValue({ update: mockUpdate });
 
       await service.toggle('h-1', 'item-1', 'user-1', true);
@@ -196,15 +202,11 @@ describe('ShoppingService', () => {
       expect(call.done_at).toBeDefined();
     });
 
-    it('clears done fields when toggling off, scoped to household', async () => {
-      const mockSingle = jest.fn().mockReturnValue({ data: { id: 'item-1' }, error: null });
-      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
-      const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
-      const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
-      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
+    it('clears done fields when toggling off and returns pantryUpdated false', async () => {
+      const { mockUpdate, mockEqHousehold } = setupToggleMock();
       mockFrom.mockReturnValue({ update: mockUpdate });
 
-      await service.toggle('h-1', 'item-1', 'user-1', false);
+      const result = await service.toggle('h-1', 'item-1', 'user-1', false);
 
       expect(mockUpdate).toHaveBeenCalledWith({
         is_done: false,
@@ -212,14 +214,11 @@ describe('ShoppingService', () => {
         done_at: null,
       });
       expect(mockEqHousehold).toHaveBeenCalledWith('household_id', 'h-1');
+      expect(result).toEqual({ pantryUpdated: false });
     });
 
     it('emits shopping:toggled event after toggle', async () => {
-      const mockSingle = jest.fn().mockReturnValue({ data: { id: 'item-1' }, error: null });
-      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
-      const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
-      const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
-      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
+      const { mockUpdate } = setupToggleMock();
       mockFrom.mockReturnValue({ update: mockUpdate });
 
       await service.toggle('h-1', 'item-1', 'user-1', true);
@@ -232,15 +231,133 @@ describe('ShoppingService', () => {
     });
 
     it('throws NotFoundException when item does not exist', async () => {
-      const mockSingle = jest.fn().mockReturnValue({ data: null, error: { code: 'PGRST116' } });
-      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
-      const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
-      const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
-      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
+      const { mockUpdate } = setupToggleMock(null);
       mockFrom.mockReturnValue({ update: mockUpdate });
 
       await expect(service.toggle('h-1', 'bad-id', 'user-1', true)).rejects.toThrow(NotFoundException);
       expect(mockEmitToHousehold).not.toHaveBeenCalled();
+    });
+
+    it('updates existing pantry item to ok when toggling done', async () => {
+      let callCount = 0;
+      mockFrom.mockImplementation((table: string) => {
+        callCount++;
+        if (callCount === 1) {
+          // shopping_items update
+          const mockSingle = jest.fn().mockReturnValue({
+            data: { id: 'item-1', name: 'Milk' },
+            error: null,
+          });
+          const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
+          const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
+          const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+          const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
+          return { update: mockUpdate };
+        }
+        if (callCount === 2) {
+          // pantry_items select (existing item found)
+          return {
+            select: () => ({
+              eq: () => ({
+                ilike: () => ({
+                  limit: () => ({
+                    data: [{ id: 'p-1', stock_level: 'empty' }],
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (callCount === 3) {
+          // pantry_items update
+          return {
+            update: () => ({
+              eq: () => ({
+                eq: () => ({ error: null }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const result = await service.toggle('h-1', 'item-1', 'user-1', true);
+
+      expect(result).toEqual({ pantryUpdated: true });
+    });
+
+    it('creates new pantry item when toggling done and item not in pantry', async () => {
+      const mockInsert = jest.fn().mockReturnValue({ error: null });
+      let callCount = 0;
+
+      mockFrom.mockImplementation((table: string) => {
+        callCount++;
+        if (callCount === 1) {
+          // shopping_items update
+          const mockSingle = jest.fn().mockReturnValue({
+            data: { id: 'item-1', name: 'Eggs' },
+            error: null,
+          });
+          const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
+          const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
+          const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+          const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
+          return { update: mockUpdate };
+        }
+        if (callCount === 2) {
+          // pantry_items select (not found)
+          return {
+            select: () => ({
+              eq: () => ({
+                ilike: () => ({
+                  limit: () => ({
+                    data: [],
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        // pantry_items insert
+        return { insert: mockInsert };
+      });
+
+      const result = await service.toggle('h-1', 'item-1', 'user-1', true);
+
+      expect(result).toEqual({ pantryUpdated: true });
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          household_id: 'h-1',
+          name: 'Eggs',
+          category: 'otros',
+          stock_level: 'ok',
+        }),
+      );
+    });
+
+    it('returns pantryUpdated false when pantry sync fails gracefully', async () => {
+      let callCount = 0;
+
+      mockFrom.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          const mockSingle = jest.fn().mockReturnValue({
+            data: { id: 'item-1', name: 'Bread' },
+            error: null,
+          });
+          const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
+          const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
+          const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+          const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
+          return { update: mockUpdate };
+        }
+        // pantry select throws
+        throw new Error('DB unavailable');
+      });
+
+      const result = await service.toggle('h-1', 'item-1', 'user-1', true);
+
+      expect(result).toEqual({ pantryUpdated: false });
     });
   });
 

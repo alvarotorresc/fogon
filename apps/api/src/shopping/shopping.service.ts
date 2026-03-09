@@ -63,7 +63,12 @@ export class ShoppingService {
     this.sendNotification(householdId, userId, `ha añadido "${name}" a la lista de la compra`);
   }
 
-  async toggle(householdId: string, itemId: string, userId: string, isDone: boolean) {
+  async toggle(
+    householdId: string,
+    itemId: string,
+    userId: string,
+    isDone: boolean,
+  ): Promise<{ pantryUpdated: boolean }> {
     const { data, error } = await this.supabase
       .from('shopping_items')
       .update({
@@ -73,7 +78,7 @@ export class ShoppingService {
       })
       .eq('id', itemId)
       .eq('household_id', householdId)
-      .select('id')
+      .select('id, name')
       .single();
 
     if (error || !data) throw new NotFoundException('Shopping item not found');
@@ -82,6 +87,18 @@ export class ShoppingService {
       householdId,
       itemId,
     });
+
+    // When marking as done, sync with pantry
+    if (!isDone) {
+      return { pantryUpdated: false };
+    }
+
+    const pantryUpdated = await this.syncToPantry(
+      householdId,
+      (data as { id: string; name: string }).name,
+    );
+
+    return { pantryUpdated };
   }
 
   async clearDone(householdId: string) {
@@ -130,6 +147,58 @@ export class ShoppingService {
       householdId,
       itemId,
     });
+  }
+
+  private async syncToPantry(householdId: string, itemName: string): Promise<boolean> {
+    try {
+      // Check if item exists in pantry
+      const { data: pantryItem } = await this.supabase
+        .from('pantry_items')
+        .select('id, stock_level')
+        .eq('household_id', householdId)
+        .ilike('name', itemName)
+        .limit(1);
+
+      if (pantryItem && pantryItem.length > 0) {
+        // Update existing pantry item to full
+        const { error: updateError } = await this.supabase
+          .from('pantry_items')
+          .update({
+            stock_level: 'ok',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', pantryItem[0].id)
+          .eq('household_id', householdId);
+
+        if (updateError) {
+          this.logger.warn(`Failed to update pantry item "${itemName}": ${updateError.message}`);
+          return false;
+        }
+
+        this.logger.log(`Updated pantry item "${itemName}" to ok for household ${householdId}`);
+        return true;
+      }
+
+      // Create new pantry item
+      const { error: insertError } = await this.supabase.from('pantry_items').insert({
+        household_id: householdId,
+        name: itemName,
+        category: 'otros',
+        stock_level: 'ok',
+        added_by: '00000000-0000-0000-0000-000000000000', // system-generated
+      });
+
+      if (insertError) {
+        this.logger.warn(`Failed to create pantry item "${itemName}": ${insertError.message}`);
+        return false;
+      }
+
+      this.logger.log(`Created pantry item "${itemName}" for household ${householdId}`);
+      return true;
+    } catch (error) {
+      this.logger.warn(`Failed to sync "${itemName}" to pantry`, error);
+      return false;
+    }
   }
 
   private sendNotification(householdId: string, userId: string, action: string): void {
