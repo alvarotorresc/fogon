@@ -14,13 +14,21 @@ import { SHOPPING_EVENTS } from '@fogon/types';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+
+interface RateLimitEntry {
+  count: number;
+  resetTime: number;
+}
+
 function householdRoom(householdId: string): string {
   return `household:${householdId}`;
 }
 
 @WebSocketGateway({
   cors: {
-    origin: [/^https?:\/\/localhost(:\d+)?$/, /fogon\.app$/],
+    origin: [/^https?:\/\/localhost(:\d+)?$/, /^https:\/\/(.*\.)?fogon\.app$/],
     credentials: true,
   },
   namespace: '/shopping',
@@ -30,6 +38,7 @@ export class ShoppingGateway implements OnGatewayConnection, OnGatewayDisconnect
   server!: Server;
 
   private readonly logger = new Logger(ShoppingGateway.name);
+  private readonly rateLimitMap = new Map<string, RateLimitEntry>();
 
   constructor(private readonly supabaseService: SupabaseService) {}
 
@@ -60,6 +69,7 @@ export class ShoppingGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   handleDisconnect(client: Socket): void {
+    this.rateLimitMap.delete(client.id);
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
@@ -68,6 +78,13 @@ export class ShoppingGateway implements OnGatewayConnection, OnGatewayDisconnect
     @ConnectedSocket() client: Socket,
     @MessageBody() payload: { householdId: string },
   ): Promise<{ success: boolean; message?: string }> {
+    if (this.isRateLimited(client)) {
+      this.logger.warn(`Rate limit exceeded for socket ${client.id}`);
+      client.emit('error', { message: 'Rate limit exceeded' });
+      client.disconnect(true);
+      return { success: false, message: 'Rate limit exceeded' };
+    }
+
     const userId: string | undefined = client.data?.userId;
     const { householdId } = payload;
 
@@ -117,6 +134,19 @@ export class ShoppingGateway implements OnGatewayConnection, OnGatewayDisconnect
     } else {
       this.server.to(room).emit(event, payload);
     }
+  }
+
+  private isRateLimited(client: Socket): boolean {
+    const now = Date.now();
+    const entry = this.rateLimitMap.get(client.id);
+
+    if (!entry || now >= entry.resetTime) {
+      this.rateLimitMap.set(client.id, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+      return false;
+    }
+
+    entry.count += 1;
+    return entry.count > RATE_LIMIT_MAX;
   }
 
   private extractToken(client: Socket): string | undefined {
