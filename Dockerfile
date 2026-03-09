@@ -35,6 +35,9 @@ COPY --from=base /app/packages/types/ packages/types/
 COPY --from=base /app/apps/api/dist/ apps/api/dist/
 COPY --from=base /app/apps/api/nest-cli.json apps/api/nest-cli.json
 
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 --ingroup nodejs nestjs
+USER nestjs
+
 WORKDIR /app/apps/api
 EXPOSE 3000
 CMD ["node", "dist/main.js"]
