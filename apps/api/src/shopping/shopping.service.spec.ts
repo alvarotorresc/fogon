@@ -143,7 +143,9 @@ describe('ShoppingService', () => {
 
   describe('toggle', () => {
     it('updates item to done with userId and timestamp, scoped to household', async () => {
-      const mockEqHousehold = jest.fn().mockReturnValue({ error: null });
+      const mockSingle = jest.fn().mockReturnValue({ data: { id: 'item-1' }, error: null });
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
+      const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
       const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
       const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
       mockFrom.mockReturnValue({ update: mockUpdate });
@@ -164,7 +166,9 @@ describe('ShoppingService', () => {
     });
 
     it('clears done fields when toggling off, scoped to household', async () => {
-      const mockEqHousehold = jest.fn().mockReturnValue({ error: null });
+      const mockSingle = jest.fn().mockReturnValue({ data: { id: 'item-1' }, error: null });
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
+      const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
       const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
       const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
       mockFrom.mockReturnValue({ update: mockUpdate });
@@ -177,6 +181,17 @@ describe('ShoppingService', () => {
         done_at: null,
       });
       expect(mockEqHousehold).toHaveBeenCalledWith('household_id', 'h-1');
+    });
+
+    it('throws NotFoundException when item does not exist', async () => {
+      const mockSingle = jest.fn().mockReturnValue({ data: null, error: { code: 'PGRST116' } });
+      const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
+      const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
+      const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+      const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
+      mockFrom.mockReturnValue({ update: mockUpdate });
+
+      await expect(service.toggle('h-1', 'bad-id', 'user-1', true)).rejects.toThrow(NotFoundException);
     });
   });
 

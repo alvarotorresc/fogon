@@ -50,7 +50,7 @@ export class ShoppingService {
   }
 
   async toggle(householdId: string, itemId: string, userId: string, isDone: boolean) {
-    const { error } = await this.supabase
+    const { data, error } = await this.supabase
       .from('shopping_items')
       .update({
         is_done: isDone,
@@ -58,9 +58,11 @@ export class ShoppingService {
         done_at: isDone ? new Date().toISOString() : null,
       })
       .eq('id', itemId)
-      .eq('household_id', householdId);
+      .eq('household_id', householdId)
+      .select('id')
+      .single();
 
-    if (error) throw new Error(error.message);
+    if (error || !data) throw new NotFoundException('Shopping item not found');
   }
 
   async clearDone(householdId: string) {
