@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { SupabaseService } from '../supabase/supabase.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -97,7 +97,10 @@ export class MealPlanService {
       .eq('week_start', weekStart)
       .not('recipe_id', 'is', null);
 
-    if (entriesError) throw new Error(entriesError.message);
+    if (entriesError) {
+      this.logger.error(`Failed to fetch meal plan entries: ${entriesError.message}`);
+      throw new InternalServerErrorException('Failed to generate shopping list');
+    }
 
     const recipeIds = [
       ...new Set(
@@ -117,7 +120,10 @@ export class MealPlanService {
       .select('name, quantity, unit')
       .in('recipe_id', recipeIds);
 
-    if (ingError) throw new Error(ingError.message);
+    if (ingError) {
+      this.logger.error(`Failed to fetch recipe ingredients: ${ingError.message}`);
+      throw new InternalServerErrorException('Failed to generate shopping list');
+    }
 
     if (!ingredients || ingredients.length === 0) {
       return { addedCount: 0, skippedCount: 0 };
@@ -130,7 +136,10 @@ export class MealPlanService {
       .eq('household_id', householdId)
       .eq('is_done', false);
 
-    if (existingError) throw new Error(existingError.message);
+    if (existingError) {
+      this.logger.error(`Failed to fetch existing shopping items: ${existingError.message}`);
+      throw new InternalServerErrorException('Failed to generate shopping list');
+    }
 
     const existingNames = new Set(
       (existingItems ?? []).map((item: { name: string }) => item.name.toLowerCase()),
@@ -179,7 +188,10 @@ export class MealPlanService {
       })),
     );
 
-    if (insertError) throw new Error(insertError.message);
+    if (insertError) {
+      this.logger.error(`Failed to insert shopping items: ${insertError.message}`);
+      throw new InternalServerErrorException('Failed to generate shopping list');
+    }
 
     this.logger.log(
       `Generated shopping list from meal plan: ${toAdd.length} added, ${skippedCount} skipped (household ${householdId}, week ${weekStart})`,

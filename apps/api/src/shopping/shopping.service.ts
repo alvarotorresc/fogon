@@ -96,6 +96,7 @@ export class ShoppingService {
     const pantryUpdated = await this.syncToPantry(
       householdId,
       (data as { id: string; name: string }).name,
+      userId,
     );
 
     return { pantryUpdated };
@@ -149,7 +150,7 @@ export class ShoppingService {
     });
   }
 
-  private async syncToPantry(householdId: string, itemName: string): Promise<boolean> {
+  private async syncToPantry(householdId: string, itemName: string, userId: string): Promise<boolean> {
     try {
       // Check if item exists in pantry
       const { data: pantryItem } = await this.supabase
@@ -185,7 +186,7 @@ export class ShoppingService {
         name: itemName,
         category: 'otros',
         stock_level: 'ok',
-        added_by: '00000000-0000-0000-0000-000000000000', // system-generated
+        added_by: userId,
       });
 
       if (insertError) {
