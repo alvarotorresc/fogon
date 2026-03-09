@@ -331,8 +331,100 @@ describe('ShoppingService', () => {
           name: 'Eggs',
           category: 'otros',
           stock_level: 'ok',
+          added_by: 'user-1',
         }),
       );
+    });
+
+    it('should return pantryUpdated false when pantry update fails after finding existing item', async () => {
+      let callCount = 0;
+
+      mockFrom.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          // shopping_items update
+          const mockSingle = jest.fn().mockReturnValue({
+            data: { id: 'item-1', name: 'Milk' },
+            error: null,
+          });
+          const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
+          const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
+          const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+          const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
+          return { update: mockUpdate };
+        }
+        if (callCount === 2) {
+          // pantry_items select (existing item found)
+          return {
+            select: () => ({
+              eq: () => ({
+                ilike: () => ({
+                  limit: () => ({
+                    data: [{ id: 'p-1', stock_level: 'empty' }],
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (callCount === 3) {
+          // pantry_items update fails
+          return {
+            update: () => ({
+              eq: () => ({
+                eq: () => ({ error: { message: 'Update failed' } }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      const result = await service.toggle('h-1', 'item-1', 'user-1', true);
+
+      expect(result).toEqual({ pantryUpdated: false });
+    });
+
+    it('should return pantryUpdated false when pantry insert fails for new item', async () => {
+      let callCount = 0;
+
+      mockFrom.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          // shopping_items update
+          const mockSingle = jest.fn().mockReturnValue({
+            data: { id: 'item-1', name: 'Eggs' },
+            error: null,
+          });
+          const mockSelect = jest.fn().mockReturnValue({ single: mockSingle });
+          const mockEqHousehold = jest.fn().mockReturnValue({ select: mockSelect });
+          const mockEqId = jest.fn().mockReturnValue({ eq: mockEqHousehold });
+          const mockUpdate = jest.fn().mockReturnValue({ eq: mockEqId });
+          return { update: mockUpdate };
+        }
+        if (callCount === 2) {
+          // pantry_items select (not found)
+          return {
+            select: () => ({
+              eq: () => ({
+                ilike: () => ({
+                  limit: () => ({
+                    data: [],
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        // pantry_items insert fails
+        return {
+          insert: () => ({ error: { message: 'Insert failed' } }),
+        };
+      });
+
+      const result = await service.toggle('h-1', 'item-1', 'user-1', true);
+
+      expect(result).toEqual({ pantryUpdated: false });
     });
 
     it('returns pantryUpdated false when pantry sync fails gracefully', async () => {
