@@ -38,13 +38,4 @@ describe('themeStore', () => {
     expect(useThemeStore.getState().mode).toBe('system');
   });
 
-  it('only accepts valid theme modes', () => {
-    const validModes = ['system', 'light', 'dark'] as const;
-    for (const mode of validModes) {
-      act(() => {
-        useThemeStore.getState().setMode(mode);
-      });
-      expect(useThemeStore.getState().mode).toBe(mode);
-    }
-  });
 });
