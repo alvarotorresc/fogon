@@ -32,6 +32,8 @@
     "add_item": "Add item",
     "clear_done": "Clear purchased",
     "empty": "Your list is empty",
+    "empty_title": "Your shopping list is empty",
+    "empty_description": "Add items manually or generate the list from your weekly menu.",
     "realtime_sync": "Synced",
     "done_by": "Marked by {{name}}",
     "categories": {
@@ -48,6 +50,8 @@
     "title": "Pantry",
     "add_item": "Add item",
     "empty": "Your pantry is empty",
+    "empty_title": "Your pantry is empty",
+    "empty_description": "Add what you have at home to keep track of your stock.",
     "stock": {
       "ok": "Good",
       "low": "Low",
@@ -68,6 +72,10 @@
     "prep_time_label": "Prep time (min)",
     "share": "Share recipe",
     "empty": "No recipes yet",
+    "empty_title": "No recipes yet",
+    "empty_description": "Create your first recipe and start planning meals with your household.",
+    "search_placeholder": "Search recipes...",
+    "search_no_results": "No recipes found",
     "name_placeholder": "Recipe name",
     "description_placeholder": "Brief description (optional)",
     "ingredient_placeholder": "Ingredient name",
@@ -113,6 +121,8 @@
     "owner": "Owner",
     "member": "Member",
     "copied": "Code copied!",
+    "share_invite": "Join my household on Fogon! Use the code: {{code}}",
+    "share_button": "Share code",
     "members_title": "Members"
   },
   "days": {

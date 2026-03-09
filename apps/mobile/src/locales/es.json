@@ -32,6 +32,8 @@
     "add_item": "Añadir item",
     "clear_done": "Limpiar comprados",
     "empty": "La lista está vacía",
+    "empty_title": "Tu lista de la compra está vacía",
+    "empty_description": "Añade items o genera la lista desde tu menú semanal.",
     "realtime_sync": "Sincronizado",
     "done_by": "Marcado por {{name}}",
     "categories": {
@@ -48,6 +50,8 @@
     "title": "Despensa",
     "add_item": "Añadir item",
     "empty": "La despensa está vacía",
+    "empty_title": "Tu despensa está vacía",
+    "empty_description": "Añade lo que tengas en casa para controlar tu stock.",
     "stock": {
       "ok": "Bien",
       "low": "Poco",
@@ -68,6 +72,10 @@
     "prep_time_label": "Tiempo de preparación (min)",
     "share": "Compartir receta",
     "empty": "Sin recetas aún",
+    "empty_title": "Aún no tienes recetas",
+    "empty_description": "Crea tu primera receta y empieza a planificar comidas con tu hogar.",
+    "search_placeholder": "Buscar recetas...",
+    "search_no_results": "No se encontraron recetas",
     "name_placeholder": "Nombre de la receta",
     "description_placeholder": "Descripción breve (opcional)",
     "ingredient_placeholder": "Nombre del ingrediente",
@@ -113,6 +121,8 @@
     "owner": "Propietario",
     "member": "Miembro",
     "copied": "¡Código copiado!",
+    "share_invite": "¡Únete a mi hogar en Fogón! Usa el código: {{code}}",
+    "share_button": "Compartir código",
     "members_title": "Miembros"
   },
   "days": {

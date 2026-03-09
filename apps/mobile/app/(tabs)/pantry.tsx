@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, FlatList, Pressable, ActivityIndicator, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus } from 'lucide-react-native';
+import { Plus, Package } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useColors } from '@/constants/useColors';
 import { usePantry, useAddPantryItem, useUpdateStockLevel } from '@/features/pantry/usePantry';
 import { PantryItem } from '@/features/pantry/PantryItem';
 import { AddPantryItemSheet } from '@/features/pantry/AddPantryItemSheet';
+import { EmptyState } from '@/components/ui/EmptyState';
 import type { PantryItem as PantryItemType } from '@fogon/types';
 import type { StockLevel } from '@fogon/types';
 
@@ -145,10 +146,13 @@ export default function PantryScreen() {
       )}
 
       {filteredItems.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-text-tertiary text-6xl mb-4">📦</Text>
-          <Text className="text-text-secondary text-base">{t('pantry.empty')}</Text>
-        </View>
+        <EmptyState
+          icon={Package}
+          title={t('pantry.empty_title')}
+          description={t('pantry.empty_description')}
+          actionLabel={t('pantry.add_item')}
+          onAction={() => setSheetVisible(true)}
+        />
       ) : (
         <FlatList
           data={filteredItems}

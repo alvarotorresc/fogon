@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { View, Text, SectionList, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, Trash2 } from 'lucide-react-native';
+import { Plus, Trash2, ShoppingCart } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useColors } from '@/constants/useColors';
 import { SHOPPING_CATEGORIES } from '@/constants/categories';
@@ -16,6 +16,7 @@ import {
 import { ShoppingItem } from '@/features/shopping/ShoppingItem';
 import { AddItemSheet } from '@/features/shopping/AddItemSheet';
 import { EditItemSheet } from '@/features/shopping/EditItemSheet';
+import { EmptyState } from '@/components/ui/EmptyState';
 import type { ShoppingItem as ShoppingItemType } from '@fogon/types';
 
 interface Section {
@@ -128,10 +129,13 @@ export default function ListScreen() {
       </View>
 
       {totalCount === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-text-tertiary text-6xl mb-4">🛒</Text>
-          <Text className="text-text-secondary text-base">{t('shopping.empty')}</Text>
-        </View>
+        <EmptyState
+          icon={ShoppingCart}
+          title={t('shopping.empty_title')}
+          description={t('shopping.empty_description')}
+          actionLabel={t('shopping.add_item')}
+          onAction={() => setSheetVisible(true)}
+        />
       ) : (
         <SectionList
           sections={sections}
