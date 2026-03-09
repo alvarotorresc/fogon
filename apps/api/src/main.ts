@@ -8,7 +8,10 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
 
-  await app.register(helmet);
+  await app.register(helmet, {
+    contentSecurityPolicy: false,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  });
   await app.register(multipart, { limits: { fileSize: 2 * 1024 * 1024 } });
 
   app.enableCors({
