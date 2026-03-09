@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { InternalServerErrorException } from '@nestjs/common';
 import { MealPlanService } from './meal-plan.service';
 import { SupabaseService } from '../supabase/supabase.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -388,6 +389,210 @@ describe('MealPlanService', () => {
       ]);
     });
 
+    it('should send notification to household after generating shopping list', async () => {
+      const mockInsert = jest.fn().mockReturnValue({ error: null });
+      let shoppingCallCount = 0;
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'meal_plan_entries') {
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  not: () => ({
+                    data: [{ recipe_id: 'r-1' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'recipe_ingredients') {
+          return {
+            select: () => ({
+              in: () => ({
+                data: [{ name: 'Tomatoes', quantity: '2', unit: 'kg' }],
+                error: null,
+              }),
+            }),
+          };
+        }
+        if (table === 'shopping_items') {
+          shoppingCallCount++;
+          if (shoppingCallCount === 1) {
+            return {
+              select: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    data: [],
+                    error: null,
+                  }),
+                }),
+              }),
+            };
+          }
+          return { insert: mockInsert };
+        }
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                single: () => ({ data: { display_name: 'Alice' }, error: null }),
+              }),
+            }),
+          }),
+        };
+      });
+
+      await service.generateShoppingList('h-1', 'user-1', '2026-03-02');
+
+      // Wait for fire-and-forget notification
+      await new Promise(process.nextTick);
+
+      expect(mockSendToHousehold).toHaveBeenCalledWith(
+        expect.objectContaining({
+          householdId: 'h-1',
+          title: 'Fogon',
+          excludeUserId: 'user-1',
+        }),
+      );
+    });
+
+    it('should throw when ingredients query fails', async () => {
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'meal_plan_entries') {
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  not: () => ({
+                    data: [{ recipe_id: 'r-1' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'recipe_ingredients') {
+          return {
+            select: () => ({
+              in: () => ({
+                data: null,
+                error: { message: 'Ingredients query failed' },
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      await expect(
+        service.generateShoppingList('h-1', 'user-1', '2026-03-02'),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should throw when existing items query fails', async () => {
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'meal_plan_entries') {
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  not: () => ({
+                    data: [{ recipe_id: 'r-1' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'recipe_ingredients') {
+          return {
+            select: () => ({
+              in: () => ({
+                data: [{ name: 'Tomatoes', quantity: '1', unit: 'kg' }],
+                error: null,
+              }),
+            }),
+          };
+        }
+        if (table === 'shopping_items') {
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  data: null,
+                  error: { message: 'Existing items query failed' },
+                }),
+              }),
+            }),
+          };
+        }
+        return {};
+      });
+
+      await expect(
+        service.generateShoppingList('h-1', 'user-1', '2026-03-02'),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should throw when shopping list insert fails', async () => {
+      let shoppingCallCount = 0;
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'meal_plan_entries') {
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  not: () => ({
+                    data: [{ recipe_id: 'r-1' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'recipe_ingredients') {
+          return {
+            select: () => ({
+              in: () => ({
+                data: [{ name: 'Tomatoes', quantity: '1', unit: 'kg' }],
+                error: null,
+              }),
+            }),
+          };
+        }
+        if (table === 'shopping_items') {
+          shoppingCallCount++;
+          if (shoppingCallCount === 1) {
+            return {
+              select: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    data: [],
+                    error: null,
+                  }),
+                }),
+              }),
+            };
+          }
+          return {
+            insert: () => ({ error: { message: 'Insert failed' } }),
+          };
+        }
+        return {};
+      });
+
+      await expect(
+        service.generateShoppingList('h-1', 'user-1', '2026-03-02'),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+
     it('throws when meal plan entries query fails', async () => {
       mockFrom.mockReturnValue({
         select: () => ({
@@ -404,7 +609,7 @@ describe('MealPlanService', () => {
 
       await expect(
         service.generateShoppingList('h-1', 'user-1', '2026-03-02'),
-      ).rejects.toThrow('Query failed');
+      ).rejects.toThrow(InternalServerErrorException);
     });
 
     it('returns zero counts when recipes have no ingredients', async () => {
