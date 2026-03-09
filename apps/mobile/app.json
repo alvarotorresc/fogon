@@ -31,6 +31,13 @@
         {
           "photosPermission": "Allow Fogon to access your photos to add recipe images."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#EA580C"
+        }
       ]
     ],
     "experiments": {

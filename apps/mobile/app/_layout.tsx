@@ -13,12 +13,14 @@ import { useAuthStore } from '@/store/authStore';
 import { useThemeSync } from '@/store/useThemeSync';
 import { ErrorToast } from '@/components/ui/ErrorToast';
 import { OfflineBanner } from '@/components/OfflineBanner';
+import { usePushNotifications } from '@/features/notifications/usePushNotifications';
 
 export default function RootLayout() {
   const { setSession, setLoading } = useAuthStore();
   const { colorScheme } = useColorScheme();
 
   useThemeSync();
+  usePushNotifications();
 
   useEffect(() => {
     supabase.auth
