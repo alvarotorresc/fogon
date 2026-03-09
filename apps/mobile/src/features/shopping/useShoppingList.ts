@@ -18,7 +18,6 @@ export function useShoppingList() {
     },
     enabled: !!household,
     staleTime: STALE_TIMES.shopping,
-    refetchInterval: 5000,
   });
 }
 
