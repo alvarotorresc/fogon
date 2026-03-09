@@ -42,8 +42,9 @@ describe('HouseholdService', () => {
   });
 
   describe('create', () => {
-    it('should create household and add member as owner', async () => {
+    it('should create household, add member as owner, and seed recipes', async () => {
       let memberInsertCalled = false;
+      const recipeInserts: Array<Record<string, unknown>> = [];
 
       mockFrom.mockImplementation((table: string) => {
         if (table === 'households') {
@@ -79,10 +80,33 @@ describe('HouseholdService', () => {
             },
           };
         }
+        if (table === 'recipes') {
+          return {
+            insert: (data: Record<string, unknown>) => {
+              recipeInserts.push(data);
+              return {
+                select: () => ({
+                  single: () => ({
+                    data: { id: `recipe-${recipeInserts.length}` },
+                    error: null,
+                  }),
+                }),
+              };
+            },
+          };
+        }
+        if (table === 'recipe_ingredients' || table === 'recipe_steps') {
+          return {
+            insert: () => ({ error: null }),
+          };
+        }
         return {};
       });
 
       const result = await service.create('user-1', 'My Home');
+
+      // Wait for the async seed to complete
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(result).toEqual({
         id: 'h-new',
@@ -91,6 +115,15 @@ describe('HouseholdService', () => {
         createdAt: '2026-03-01',
       });
       expect(memberInsertCalled).toBe(true);
+      expect(recipeInserts.length).toBe(5);
+      expect(recipeInserts[0]).toEqual(
+        expect.objectContaining({
+          household_id: 'h-new',
+          title: 'Tortilla de patatas',
+          is_public: false,
+          created_by: 'user-1',
+        }),
+      );
     });
 
     it('should throw error when household insert fails', async () => {
