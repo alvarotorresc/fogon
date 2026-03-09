@@ -2,8 +2,18 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { HouseholdService } from './household.service';
 import { SupabaseService } from '../supabase/supabase.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const mockFrom = jest.fn();
+const mockSendToHousehold = jest.fn().mockResolvedValue(undefined);
+
+jest.mock('expo-server-sdk', () => {
+  function MockExpo() {
+    return {};
+  }
+  MockExpo.isExpoPushToken = () => true;
+  return { __esModule: true, default: MockExpo };
+});
 
 describe('HouseholdService', () => {
   let service: HouseholdService;
@@ -17,6 +27,12 @@ describe('HouseholdService', () => {
           provide: SupabaseService,
           useValue: {
             getClient: () => ({ from: mockFrom }),
+          },
+        },
+        {
+          provide: NotificationsService,
+          useValue: {
+            sendToHousehold: mockSendToHousehold,
           },
         },
       ],

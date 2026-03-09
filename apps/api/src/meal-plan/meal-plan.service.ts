@@ -1,12 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { SupabaseService } from '../supabase/supabase.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class MealPlanService {
   private readonly supabase: SupabaseClient;
+  private readonly logger = new Logger(MealPlanService.name);
 
-  constructor(private readonly supabaseService: SupabaseService) {
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly notificationsService: NotificationsService,
+  ) {
     this.supabase = this.supabaseService.getClient();
   }
 
@@ -60,6 +65,8 @@ export class MealPlanService {
     );
 
     if (error) throw new Error(error.message);
+
+    this.sendNotification(householdId, userId, 'ha actualizado el menu semanal');
   }
 
   async remove(householdId: string, entryId: string) {
@@ -70,5 +77,31 @@ export class MealPlanService {
       .eq('household_id', householdId);
 
     if (error) throw new Error(error.message);
+  }
+
+  private sendNotification(householdId: string, userId: string, action: string): void {
+    this.getDisplayName(householdId, userId)
+      .then((displayName) => {
+        this.notificationsService.sendToHousehold({
+          householdId,
+          title: 'Fogon',
+          body: `${displayName} ${action}`,
+          excludeUserId: userId,
+        });
+      })
+      .catch((error) => {
+        this.logger.warn('Failed to send meal plan notification', error);
+      });
+  }
+
+  private async getDisplayName(householdId: string, userId: string): Promise<string> {
+    const { data } = await this.supabase
+      .from('household_members')
+      .select('display_name')
+      .eq('household_id', householdId)
+      .eq('user_id', userId)
+      .single();
+
+    return (data?.display_name as string) ?? 'Alguien';
   }
 }

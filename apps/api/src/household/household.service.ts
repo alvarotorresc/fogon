@@ -1,18 +1,24 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ConflictException,
   ForbiddenException,
 } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { SupabaseService } from '../supabase/supabase.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { AVATAR_COLORS } from './constants';
 
 @Injectable()
 export class HouseholdService {
   private readonly supabase: SupabaseClient;
+  private readonly logger = new Logger(HouseholdService.name);
 
-  constructor(private readonly supabaseService: SupabaseService) {
+  constructor(
+    private readonly supabaseService: SupabaseService,
+    private readonly notificationsService: NotificationsService,
+  ) {
     this.supabase = this.supabaseService.getClient();
   }
 
@@ -81,6 +87,17 @@ export class HouseholdService {
     });
 
     if (insertError) throw new Error(insertError.message);
+
+    this.notificationsService
+      .sendToHousehold({
+        householdId: household.id as string,
+        title: 'Fogon',
+        body: `${displayName} se ha unido al hogar`,
+        excludeUserId: userId,
+      })
+      .catch((error) => {
+        this.logger.warn('Failed to send join notification', error);
+      });
 
     return {
       id: household.id,

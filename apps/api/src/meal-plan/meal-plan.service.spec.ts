@@ -1,8 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MealPlanService } from './meal-plan.service';
 import { SupabaseService } from '../supabase/supabase.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const mockFrom = jest.fn();
+const mockSendToHousehold = jest.fn().mockResolvedValue(undefined);
+
+jest.mock('expo-server-sdk', () => {
+  function MockExpo() {
+    return {};
+  }
+  MockExpo.isExpoPushToken = () => true;
+  return { __esModule: true, default: MockExpo };
+});
 
 describe('MealPlanService', () => {
   let service: MealPlanService;
@@ -16,6 +26,12 @@ describe('MealPlanService', () => {
           provide: SupabaseService,
           useValue: {
             getClient: () => ({ from: mockFrom }),
+          },
+        },
+        {
+          provide: NotificationsService,
+          useValue: {
+            sendToHousehold: mockSendToHousehold,
           },
         },
       ],
