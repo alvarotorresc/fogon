@@ -8,6 +8,7 @@ import { PantryModule } from './pantry/pantry.module';
 import { RecipeModule } from './recipe/recipe.module';
 import { ShoppingModule } from './shopping/shopping.module';
 import { SupabaseModule } from './supabase/supabase.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { JwtAuthGuard } from './auth/auth.guard';
 import { GlobalExceptionFilter } from './common/http-exception.filter';
 
@@ -16,6 +17,7 @@ import { GlobalExceptionFilter } from './common/http-exception.filter';
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 10 }]),
     SupabaseModule,
+    NotificationsModule,
     HouseholdModule,
     ShoppingModule,
     PantryModule,
