@@ -76,4 +76,26 @@ export function useClearMealSlot() {
   });
 }
 
+export function useGenerateShoppingList() {
+  const qc = useQueryClient();
+  const { household } = useHouseholdStore();
+
+  return useMutation({
+    mutationFn: async ({
+      weekOffset = 0,
+    }: {
+      weekOffset?: number;
+    } = {}): Promise<{ addedCount: number; skippedCount: number }> => {
+      const weekStart = getWeekStart(weekOffset);
+      const { data } = await api.post(
+        `/households/${household!.id}/meal-plan/generate-shopping-list?weekStart=${weekStart}`,
+      );
+      return data.data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['shopping_items'] });
+    },
+  });
+}
+
 export { getWeekStart };

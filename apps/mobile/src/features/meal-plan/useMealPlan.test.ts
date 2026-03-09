@@ -1,7 +1,7 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement, type ReactNode } from 'react';
-import { useAssignMeal, useClearMealSlot } from './useMealPlan';
+import { useAssignMeal, useClearMealSlot, useGenerateShoppingList } from './useMealPlan';
 
 const mockPost = jest.fn().mockResolvedValue({ data: { data: null } });
 const mockDelete = jest.fn().mockResolvedValue({ data: { data: null } });
@@ -115,5 +115,31 @@ describe('useClearMealSlot', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(mockDelete).toHaveBeenCalledWith('/households/hh-456/meal-plan/mp-1');
+  });
+});
+
+describe('useGenerateShoppingList', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('should POST to generate-shopping-list with weekStart query param', async () => {
+    mockPost.mockResolvedValue({
+      data: { data: { addedCount: 5, skippedCount: 2 } },
+    });
+
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useGenerateShoppingList(), { wrapper });
+
+    await act(async () => {
+      result.current.mutate({});
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(mockPost).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /^\/households\/hh-456\/meal-plan\/generate-shopping-list\?weekStart=\d{4}-\d{2}-\d{2}$/,
+      ),
+    );
+    expect(result.current.data).toEqual({ addedCount: 5, skippedCount: 2 });
   });
 });

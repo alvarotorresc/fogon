@@ -165,4 +165,280 @@ describe('MealPlanService', () => {
       expect(mockEqHousehold).toHaveBeenCalledWith('household_id', 'h-1');
     });
   });
+
+  describe('generateShoppingList', () => {
+    it('returns zero counts when no entries have recipes', async () => {
+      mockFrom.mockReturnValue({
+        select: () => ({
+          eq: () => ({
+            eq: () => ({
+              not: () => ({
+                data: [],
+                error: null,
+              }),
+            }),
+          }),
+        }),
+      });
+
+      const result = await service.generateShoppingList('h-1', 'user-1', '2026-03-02');
+
+      expect(result).toEqual({ addedCount: 0, skippedCount: 0 });
+    });
+
+    it('adds ingredients from meal plan recipes to shopping list', async () => {
+      const mockInsert = jest.fn().mockReturnValue({ error: null });
+      let shoppingCallCount = 0;
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'meal_plan_entries') {
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  not: () => ({
+                    data: [{ recipe_id: 'r-1' }, { recipe_id: 'r-2' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'recipe_ingredients') {
+          return {
+            select: () => ({
+              in: () => ({
+                data: [
+                  { name: 'Tomatoes', quantity: '2', unit: 'kg' },
+                  { name: 'Onion', quantity: '1', unit: null },
+                ],
+                error: null,
+              }),
+            }),
+          };
+        }
+        if (table === 'shopping_items') {
+          shoppingCallCount++;
+          if (shoppingCallCount === 1) {
+            return {
+              select: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    data: [],
+                    error: null,
+                  }),
+                }),
+              }),
+            };
+          }
+          return { insert: mockInsert };
+        }
+        // For notification display_name lookup
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                single: () => ({ data: { display_name: 'Alice' }, error: null }),
+              }),
+            }),
+          }),
+        };
+      });
+
+      const result = await service.generateShoppingList('h-1', 'user-1', '2026-03-02');
+
+      expect(result).toEqual({ addedCount: 2, skippedCount: 0 });
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ name: 'Tomatoes', quantity: '2 kg', category: 'otros' }),
+          expect.objectContaining({ name: 'Onion', quantity: '1', category: 'otros' }),
+        ]),
+      );
+    });
+
+    it('skips ingredients already in the shopping list', async () => {
+      const mockInsert = jest.fn().mockReturnValue({ error: null });
+      let shoppingCallCount = 0;
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'meal_plan_entries') {
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  not: () => ({
+                    data: [{ recipe_id: 'r-1' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'recipe_ingredients') {
+          return {
+            select: () => ({
+              in: () => ({
+                data: [
+                  { name: 'Tomatoes', quantity: '2', unit: 'kg' },
+                  { name: 'Salt', quantity: null, unit: null },
+                ],
+                error: null,
+              }),
+            }),
+          };
+        }
+        if (table === 'shopping_items') {
+          shoppingCallCount++;
+          if (shoppingCallCount === 1) {
+            return {
+              select: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    data: [{ name: 'tomatoes' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            };
+          }
+          return { insert: mockInsert };
+        }
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                single: () => ({ data: { display_name: 'Alice' }, error: null }),
+              }),
+            }),
+          }),
+        };
+      });
+
+      const result = await service.generateShoppingList('h-1', 'user-1', '2026-03-02');
+
+      expect(result).toEqual({ addedCount: 1, skippedCount: 1 });
+    });
+
+    it('deduplicates ingredients by name across recipes', async () => {
+      const mockInsert = jest.fn().mockReturnValue({ error: null });
+      let shoppingCallCount = 0;
+
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'meal_plan_entries') {
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  not: () => ({
+                    data: [{ recipe_id: 'r-1' }, { recipe_id: 'r-2' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === 'recipe_ingredients') {
+          return {
+            select: () => ({
+              in: () => ({
+                data: [
+                  { name: 'Garlic', quantity: '2', unit: 'cloves' },
+                  { name: 'garlic', quantity: '1', unit: 'clove' },
+                ],
+                error: null,
+              }),
+            }),
+          };
+        }
+        if (table === 'shopping_items') {
+          shoppingCallCount++;
+          if (shoppingCallCount === 1) {
+            return {
+              select: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    data: [],
+                    error: null,
+                  }),
+                }),
+              }),
+            };
+          }
+          return { insert: mockInsert };
+        }
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                single: () => ({ data: { display_name: 'Alice' }, error: null }),
+              }),
+            }),
+          }),
+        };
+      });
+
+      const result = await service.generateShoppingList('h-1', 'user-1', '2026-03-02');
+
+      expect(result).toEqual({ addedCount: 1, skippedCount: 0 });
+      expect(mockInsert).toHaveBeenCalledWith([
+        expect.objectContaining({ name: 'Garlic', quantity: '2 cloves' }),
+      ]);
+    });
+
+    it('throws when meal plan entries query fails', async () => {
+      mockFrom.mockReturnValue({
+        select: () => ({
+          eq: () => ({
+            eq: () => ({
+              not: () => ({
+                data: null,
+                error: { message: 'Query failed' },
+              }),
+            }),
+          }),
+        }),
+      });
+
+      await expect(
+        service.generateShoppingList('h-1', 'user-1', '2026-03-02'),
+      ).rejects.toThrow('Query failed');
+    });
+
+    it('returns zero counts when recipes have no ingredients', async () => {
+      let callCount = 0;
+
+      mockFrom.mockImplementation((table: string) => {
+        callCount++;
+        if (table === 'meal_plan_entries') {
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  not: () => ({
+                    data: [{ recipe_id: 'r-1' }],
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        return {
+          select: () => ({
+            in: () => ({
+              data: [],
+              error: null,
+            }),
+          }),
+        };
+      });
+
+      const result = await service.generateShoppingList('h-1', 'user-1', '2026-03-02');
+
+      expect(result).toEqual({ addedCount: 0, skippedCount: 0 });
+    });
+  });
 });

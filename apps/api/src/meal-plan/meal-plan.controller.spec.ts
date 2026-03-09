@@ -7,6 +7,7 @@ const mockMealPlanService = {
   findByWeek: jest.fn(),
   assign: jest.fn(),
   remove: jest.fn(),
+  generateShoppingList: jest.fn(),
 };
 
 describe('MealPlanController', () => {
@@ -99,6 +100,36 @@ describe('MealPlanController', () => {
           { userId: 'user-1' },
         ),
       ).rejects.toThrow('Upsert failed');
+    });
+  });
+
+  describe('generateShoppingList', () => {
+    it('should return { data: { addedCount, skippedCount } }', async () => {
+      mockMealPlanService.generateShoppingList.mockResolvedValue({
+        addedCount: 5,
+        skippedCount: 2,
+      });
+
+      const result = await controller.generateShoppingList(
+        'h-1',
+        { weekStart: '2026-03-02' },
+        { userId: 'user-1' },
+      );
+
+      expect(result).toEqual({ data: { addedCount: 5, skippedCount: 2 } });
+      expect(mockMealPlanService.generateShoppingList).toHaveBeenCalledWith(
+        'h-1',
+        'user-1',
+        '2026-03-02',
+      );
+    });
+
+    it('should propagate service errors', async () => {
+      mockMealPlanService.generateShoppingList.mockRejectedValue(new Error('Failed'));
+
+      await expect(
+        controller.generateShoppingList('h-1', { weekStart: '2026-03-02' }, { userId: 'user-1' }),
+      ).rejects.toThrow('Failed');
     });
   });
 
