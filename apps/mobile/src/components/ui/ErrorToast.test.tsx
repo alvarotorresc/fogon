@@ -92,7 +92,7 @@ describe('ErrorToast', () => {
     useErrorStore.getState().showError('Accessible error');
     const { UNSAFE_root } = render(createElement(ErrorToast));
     const alertNode = UNSAFE_root.findAll(
-      (node) => node.props.accessibilityRole === 'alert',
+      (node: { props: { accessibilityRole?: string } }) => node.props.accessibilityRole === 'alert',
     );
     expect(alertNode.length).toBeGreaterThan(0);
   });

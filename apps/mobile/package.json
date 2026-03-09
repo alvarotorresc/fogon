@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "expo start",
     "build": "expo export",
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "eslint src/ app/",
     "typecheck": "tsc --noEmit",
     "test": "jest --passWithNoTests"
   },

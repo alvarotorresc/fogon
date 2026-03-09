@@ -25,7 +25,7 @@ export default function PantryScreen() {
   const [filter, setFilter] = useState<FilterValue>('all');
   const [shoppingFeedback, setShoppingFeedback] = useState(false);
   const feedbackOpacity = useRef(new Animated.Value(0)).current;
-  const feedbackTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const feedbackTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const showShoppingFeedback = useCallback(() => {
     setShoppingFeedback(true);
