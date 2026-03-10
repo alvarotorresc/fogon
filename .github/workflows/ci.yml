@@ -24,6 +24,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @fogon/types build
       - run: pnpm --filter @fogon/api lint
       - run: pnpm --filter @fogon/mobile lint
 
@@ -40,6 +41,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @fogon/types build
       - run: pnpm --filter @fogon/api typecheck
       - run: pnpm --filter @fogon/mobile typecheck
       - run: pnpm --filter @fogon/landing typecheck
@@ -58,6 +60,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @fogon/types build
       - run: pnpm --filter @fogon/mobile test -- --forceExit
 
   test-api:
@@ -74,4 +77,5 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @fogon/types build
       - run: pnpm --filter @fogon/api test -- --forceExit
