@@ -16,7 +16,9 @@ RUN pnpm install --frozen-lockfile --filter @fogon/api...
 COPY packages/types/ packages/types/
 COPY apps/api/ apps/api/
 
-# Build
+# Build types first, then API
+WORKDIR /app/packages/types
+RUN pnpm build
 WORKDIR /app/apps/api
 RUN pnpm build
 
@@ -31,7 +33,7 @@ COPY --from=base /app/apps/api/package.json apps/api/
 
 RUN pnpm install --frozen-lockfile --filter @fogon/api... --prod
 
-COPY --from=base /app/packages/types/ packages/types/
+COPY --from=base /app/packages/types/dist/ packages/types/dist/
 COPY --from=base /app/apps/api/dist/ apps/api/dist/
 COPY --from=base /app/apps/api/nest-cli.json apps/api/nest-cli.json
 
